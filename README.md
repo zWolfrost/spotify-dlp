@@ -6,7 +6,7 @@ Then, it downloads the result by using yt-dlp.
 
 &nbsp;
 ## Requirements
-The ".exe" pyinstaller version in the [releases tab](/releases/latest) has the libraries already included
+The ".exe" pyinstaller version in the releases tab has the libraries already included
 
 The only real requirements are the spotify client ID and client Secret, which you can get by [creating a spotify app](https://developer.spotify.com/documentation/web-api/concepts/apps) in the spotify dashboard.
 
