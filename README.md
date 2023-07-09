@@ -19,6 +19,7 @@ The only real requirements are the spotify client ID and client Secret, which yo
 | --client-id     | -i        | :heavy_check_mark: | *        | The Spotify Client ID.
 | --client-secret | -s        | :heavy_check_mark: | *        | The Spotify Client Secret.
 | --output        | -o        | :x:                | "."      | The output path of the downloaded tracks.
+| --audio-codec   | -a        | :x:                | "m4a"    | The audio codec of the downloaded tracks.
 | --search-type   | -t        | :x:                | "tracks" | When searching up a query, the specified type of content.
 
 *Looks the value up in a ".env" file which **should be in the same filepath as the script**
