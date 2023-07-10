@@ -3,10 +3,13 @@ from dotenv import dotenv_values
 from SpotifyApi import SpotifyApi
 
 
+def raiseError(msg):
+   sys.excepthook = lambda exc, val, tb: print("\033[91mERROR\033[0m: " + msg)
+
 
 ### PARSE ARGUMENTS ###
 
-spotify_client = dotenv_values() or dotenv_values(os.path.dirname(sys.executable) + "/.env")
+spotify_client = dict(dotenv_values() or dotenv_values(os.path.dirname(sys.executable) + "/.env"))
 parser = argparse.ArgumentParser()
 
 parser.add_argument(
@@ -14,15 +17,15 @@ parser.add_argument(
    help="The words to search up or a link to a spotify album, artist, playlist or track."
 )
 parser.add_argument(
-   "-i", "--client-id", type=str, default=spotify_client["CLIENT_ID"], required=(spotify_client["CLIENT_ID"] == None),
+   "-i", "--client-id", type=str, default=spotify_client.get("CLIENT_ID", None), required=("CLIENT_ID" in spotify_client) == False,
    help="The Spotify Client ID."
 )
 parser.add_argument(
-   "-s", "--client-secret", type=str, default=spotify_client["CLIENT_SECRET"], required=(spotify_client["CLIENT_SECRET"] == None),
+   "-s", "--client-secret", type=str, default=spotify_client.get("CLIENT_SECRET", None), required=("CLIENT_SECRET" in spotify_client) == False,
    help="The Spotify Client Secret."
 )
 parser.add_argument(
-   "-o", "--output", type=str, default=".",
+   "-o", "--output-path", type=str, default=".",
    help="The output path of the downloaded tracks."
 )
 parser.add_argument(
@@ -30,7 +33,7 @@ parser.add_argument(
    help="The audio codec of the downloaded tracks."
 )
 parser.add_argument(
-   "-t", "--search-type", type=str, default="tracks", choices=["albums", "artists", "playlists", "tracks"],
+   "-t", "--search-type", type=str, default="track", choices=["album", "artist", "playlist", "track"],
    help="When searching up a query, the specified type of content."
 )
 
@@ -42,9 +45,9 @@ args = vars(parser.parse_args())
 
 try:
    spotify_api = SpotifyApi(args["client_id"], args["client_secret"])
-   info = spotify_api.get_tracks_info(" ".join(args["query"]))
+   info = spotify_api.get_tracks_info(" ".join(args["query"]), args["search_type"])
 except:
-   raise Exception("Client ID and/or Client Secret were not specified or invalid.")
+   raiseError("Client ID and/or Client Secret are invalid.")
 
 
 def track_beautify(track):
@@ -77,7 +80,7 @@ for index, track in enumerate(info, start=1):
       track["query"],
       {
          "quiet": True,
-         "outtmpl": track_beautify(track) + ".%(ext)s",
+         "outtmpl": f"{args['output_path']}/{track_beautify(track)}.%(ext)s",
          "format": "m4a/bestaudio/best",
          "postprocessors": [
             {

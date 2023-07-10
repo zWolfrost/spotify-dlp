@@ -28,7 +28,7 @@ class SpotifyApi:
       return content
 
 
-   def get_tracks_info(self, track, searchtype="tracks"):
+   def get_tracks_info(self, track, search_type="tracks", search_count=1):
 
       def item_info(item, album_name=None):
          if (album_name == None): album_name = item["album"]["name"]
@@ -53,11 +53,13 @@ class SpotifyApi:
       try:
          type, id = self.clean_url(track)
       except:
-         result = self.get_request(f"/search?q={track}&type=album,artist,playlist,track&limit=1")[searchtype]["items"]
-
+         result = self.get_request(f"/search?q={track}&type={search_type}&limit={search_count}")
+         result = list(result.values())[0]["items"]
+         
          if (len(result) == 0): raise Exception("No tracks were found!")
 
-         type, id = self.clean_url(result[0]["external_urls"]["spotify"])
+         type = search_type
+         id = result[0]["id"]
 
 
       match(type):
@@ -105,13 +107,11 @@ class SpotifyApi:
 
 
 #import os, json
-#from dotenv import load_dotenv
-#load_dotenv()
-#spotifyapi = SpotifyApi(os.getenv("CLIENT_ID"), os.getenv("CLIENT_SECRET"))
+#from dotenv import dotenv_values
+#spotify_client = dotenv_values() or dotenv_values(os.path.dirname(sys.executable) + "/.env")
+#spotify_api = SpotifyApi(spotify_client["CLIENT_ID"], spotify_client["CLIENT_SECRET"])
 #
 #
-#query = "hybrid theory"
-#searchtype = "tracks"
 #"""
 #https://open.spotify.com/album/09wqWIOKWuS6RwjBrXe08B?si=3266fb2161824070
 #https://open.spotify.com/artist/7jy3rLJdDQY21OgRLCZ9sD?si=4a55232349a94d48
@@ -121,4 +121,7 @@ class SpotifyApi:
 #"""
 #
 #
-#print(json.dumps(spotifyapi.get_tracks_info(query, searchtype), indent=3))
+#query = "meteora"
+#search_type = "album"
+#
+#print(json.dumps(spotify_api.get_tracks_info(query, search_type), indent=3))
