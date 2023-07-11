@@ -31,7 +31,7 @@ You're done! Now to use it just open a command prompt in the folder you've just 
 | --output-path   | -o        | "."      | The output path of the downloaded tracks.
 | --audio-codec   | -a        | "m4a"    | The audio codec of the downloaded tracks.
 | --ask-confirm   | -c        | False    | Whether to ask for confirmation before downloading.
-| --list-items    | -l        | ":"      | The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted."
+| --list-items    | -l        | ":"      | The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.
 | --search-type   | -t        | "track"  | When searching up a query, the specified type of content.
 | --verbose       | -v        | False    | Whether to include verbose text.
 
