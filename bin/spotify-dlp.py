@@ -33,15 +33,27 @@ parser.add_argument(
    help="The audio codec of the downloaded tracks."
 )
 parser.add_argument(
+   "-c", "--ask-confirm", action="store_true",
+   help="Whether to ask for confirmation before downloading."
+)
+parser.add_argument(
+   "-l", "--list-items", type=str, default=":",
+   help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted."
+)
+parser.add_argument(
    "-t", "--search-type", type=str, default="track", choices=["album", "artist", "playlist", "track"],
    help="When searching up a query, the specified type of content."
+)
+parser.add_argument(
+   "-v", "--verbose", action="store_true",
+   help="Whether to include verbose text."
 )
 
 args = vars(parser.parse_args())
 
 
 
-### GET & PRINT TRACKS INFO ###
+### GET QUERY TRACKS INFO & SLICE ###
 
 try:
    spotify_api = SpotifyApi(args["client_id"], args["client_secret"])
@@ -50,12 +62,39 @@ except:
    raiseError("Client ID and/or Client Secret are invalid.")
 
 
+try:
+   begindex, endindex = args['list_items'].split(":")
+except:
+   raiseError('List items argument must include one colon ":".')
+
+try:
+
+   begindex = 0    if (begindex == "" or begindex == "0") else int(begindex)-1
+   endindex = None if (endindex == "" or endindex == "0") else int(endindex)
+   
+   info = info[begindex:endindex]
+except:
+   raiseError("Invalid list items argument.")
+
+
+
+### DISPLAY TRACKS & ASK CONFIRMATION ###
+
 def track_beautify(track):
    return f"{track['name']} - {', '.join([author for author in track['authors']])} ({track['album']})"
 
 
 print(f"\n[spotify-dlp] The query you requested contained {len(info)} tracks:")
-for index, track in enumerate(info, start=1): print(f"{index}. {track_beautify(track)}")
+for index, track in enumerate(info, start=begindex+1): print(f"{index}. {track_beautify(track)}")
+
+
+if (args["ask_confirm"]):
+   choice = input("\nAre you sure you want to download these tracks? (Y/n)\n").lower()
+
+   if (choice == "n" or choice == "no"):
+      sys.exit()
+
+
 print()
 
 
@@ -79,7 +118,7 @@ for index, track in enumerate(info, start=1):
    download_query(
       track["query"],
       {
-         "quiet": True,
+         "quiet": not args["verbose"],
          "outtmpl": f"{args['output_path']}/{track_beautify(track)}.%(ext)s",
          "format": "m4a/bestaudio/best",
          "postprocessors": [

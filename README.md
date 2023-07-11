@@ -22,7 +22,10 @@ Also it's recommended to add spotify-dlp.exe in the Path environment variables
 | --client-secret | -s        | :heavy_check_mark: | *        | The Spotify Client Secret.
 | --output-path   | -o        | :x:                | "."      | The output path of the downloaded tracks.
 | --audio-codec   | -a        | :x:                | "m4a"    | The audio codec of the downloaded tracks.
+| --ask-confirm   | -c        | :x:                | False    | Whether to ask for confirmation before downloading.
+| --list-items    | -l        | :x:                | ":"      | The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted."
 | --search-type   | -t        | :x:                | "track"  | When searching up a query, the specified type of content.
+| --verbose       | -v        | :x:                | False    | Whether to include verbose text.
 
 *Looks the value up in a ".env" file which **should be in the same filepath as the script**
 
@@ -32,10 +35,13 @@ Note: The .env file in question is [present in the repository](.env) as a refere
 &nbsp;
 ## Use Examples
 ```
-spotify-dlp white pony -t album -o "%userprofile%\Desktop" -a mp3
+spotify-dlp change deftones
 ```
 ```
-spotify-dlp https://open.spotify.com/album/7o4UsmV37Sg5It2Eb7vHzu -i <Client ID> -s <Client Secret>
+spotify-dlp white pony -t album -o "%userprofile%\Desktop" -a mp3 -c
+```
+```
+spotify-dlp https://open.spotify.com/album/5LEXck3kfixFaA3CqVE7bC -i <Client ID> -s <Client Secret>
 ```
 
 
