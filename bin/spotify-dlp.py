@@ -3,9 +3,6 @@ from dotenv import dotenv_values
 from SpotifyApi import SpotifyApi
 
 
-def raiseError(msg):
-   sys.excepthook = lambda exc, val, tb: print("\033[91mERROR\033[0m: " + msg)
-
 
 ### PARSE ARGUMENTS ###
 
@@ -59,22 +56,25 @@ try:
    spotify_api = SpotifyApi(args["client_id"], args["client_secret"])
    info = spotify_api.get_tracks_info(" ".join(args["query"]), args["search_type"])
 except:
-   raiseError("Client ID and/or Client Secret are invalid.")
+   print("ERROR: Couldn't get token. Client ID and/or Client Secret are probably invalid.")
+   sys.exit()
 
 
 try:
    begindex, endindex = args['list_items'].split(":")
 except:
-   raiseError('List items argument must include one colon ":".')
+   print('ERROR: List items argument must include one colon ":".')
+   sys.exit()
 
 try:
 
    begindex = 0    if (begindex == "" or begindex == "0") else int(begindex)-1
    endindex = None if (endindex == "" or endindex == "0") else int(endindex)
-   
+
    info = info[begindex:endindex]
 except:
-   raiseError("Invalid list items argument.")
+   print("ERROR: Invalid list items argument.")
+   sys.exit()
 
 
 

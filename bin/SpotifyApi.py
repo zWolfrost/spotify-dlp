@@ -1,28 +1,24 @@
-import base64, json, requests
+import json, requests
 
-SPOTIFY_ENDPOINT = "https://api.spotify.com/v1"
 
 class SpotifyApi:
    def __init__(self, client_id, client_secret):
-      auth_string = client_id + ":" + client_secret
-      auth_base64 = str(base64.b64encode(auth_string.encode("utf-8")), "utf-8")
+      headers = {"Content-Type": "application/x-www-form-urlencoded"}
+      data = f"grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}"
 
-      url = "https://accounts.spotify.com/api/token"
-      headers = {
-         "Authorization": "Basic " + auth_base64,
-         "Content-Type": "application/x-www-form-urlencoded"
-      }
-      data = {"grant_type": "client_credentials"}
-      result = requests.post(url, headers=headers, data=data)
+      result = requests.post("https://accounts.spotify.com/api/token", headers=headers, data=data)
+
+      content = json.loads(result.content)
+      if ("error" in content): raise Exception(content["error"])
 
       self.token = json.loads(result.content)["access_token"]
 
 
    def get_request(self, uri):
       headers = {"Authorization": "Bearer " + self.token}
-      result = requests.get(SPOTIFY_ENDPOINT + uri, headers=headers)
-      content = json.loads(result.content)
+      result = requests.get("https://api.spotify.com/v1" + uri, headers=headers)
 
+      content = json.loads(result.content)
       if ("error" in content): raise Exception(content["error"]["message"])
 
       return content
@@ -55,7 +51,7 @@ class SpotifyApi:
       except:
          result = self.get_request(f"/search?q={track}&type={search_type}&limit={search_count}")
          result = list(result.values())[0]["items"]
-         
+
          if (len(result) == 0): raise Exception("No tracks were found!")
 
          type = search_type
@@ -106,9 +102,8 @@ class SpotifyApi:
 ############### TESTING ###############
 
 
-#import os, json
 #from dotenv import dotenv_values
-#spotify_client = dotenv_values() or dotenv_values(os.path.dirname(sys.executable) + "/.env")
+#spotify_client = dotenv_values()
 #spotify_api = SpotifyApi(spotify_client["CLIENT_ID"], spotify_client["CLIENT_SECRET"])
 #
 #
