@@ -24,7 +24,7 @@ class SpotifyApi:
       return content
 
 
-   def get_tracks_info(self, track, search_type="tracks", search_count=1):
+   def get_tracks_info(self, track, search_type="track", search_count=1):
 
       def item_info(item, album_name=None):
          if (album_name == None): album_name = item["album"]["name"]
@@ -111,7 +111,6 @@ class SpotifyApi:
 #https://open.spotify.com/album/09wqWIOKWuS6RwjBrXe08B?si=3266fb2161824070
 #https://open.spotify.com/artist/7jy3rLJdDQY21OgRLCZ9sD?si=4a55232349a94d48
 #https://open.spotify.com/playlist/7mBgbujFe7cAZ5rrK0HTxp?si=82b3e3f2549641b5
-#https://open.spotify.com/show/6TXzjtMTEopiGjIsCfvv6W?si=8f7012b4b6d340be
 #https://open.spotify.com/track/6rDaCGqcQB1urhpCrrD599?si=05987dc8f4ae4d31
 #"""
 #
