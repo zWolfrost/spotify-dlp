@@ -1,7 +1,7 @@
 import json, requests
 
 
-class SpotifyApi:
+class spotify_api:
    def __init__(self, client_id, client_secret):
       headers = {"Content-Type": "application/x-www-form-urlencoded"}
       data = f"grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}"
@@ -24,8 +24,7 @@ class SpotifyApi:
       return content
 
 
-   def get_tracks_info(self, track, search_type="track", search_count=1):
-
+   def get_tracks_info(self, url):
       def item_info(item, album_name=None):
          if (album_name == None): album_name = item["album"]["name"]
          info = {
@@ -46,47 +45,41 @@ class SpotifyApi:
             else: result.append(item)
          return result
 
-      try:
-         type, id = self.clean_url(track)
-      except:
-         result = self.get_request(f"/search?q={track}&type={search_type}&limit={search_count}")
-         result = list(result.values())[0]["items"]
-
-         if (len(result) == 0): raise Exception("No tracks were found!")
-
-         type = search_type
-         id = result[0]["id"]
-
+      type, id = self.clean_url(url)
 
       match(type):
          case "album":
             album_name = self.get_request(f"/albums/{id}")["name"]
             result = self.get_request(f"/albums/{id}/tracks")
-
             info = [item_info(item, album_name) for item in result["items"]]
 
          case "artist":
             result = self.get_request(f"/artists/{id}/top-tracks?market=US")
-
             info = [item_info(item) for item in result["tracks"]]
 
          case "playlist":
             result = self.get_request(f"/playlists/{id}/tracks")
-
             info = [item_info(item["track"]) for item in result["items"]]
 
          case "track":
             result = self.get_request(f"/tracks?ids={id}")
-
             info = [item_info(item) for item in result["tracks"]]
 
+      return info
+
+   def get_search_info(self, query, search_type="track", search_count=1):
+      result = self.get_request(f"/search?q={query}&type={search_type}&limit={search_count}")
+      result = list(result.values())[0]["items"]
+
+      if (len(result) == 0): raise Exception("No tracks were found!")
+
+      info = self.get_tracks_info(f"https://open.spotify.com/{search_type}/{result[0]['id']}")
 
       return info
 
 
    @staticmethod
    def clean_url(url, begstr="spotify.com/", endstr="?"):
-
       beg = url.find(begstr)
       if (beg == -1): beg = 0
       else: beg += len(begstr)
@@ -100,11 +93,9 @@ class SpotifyApi:
 
 
 ############### TESTING ###############
-
-
-#from dotenv import dotenv_values
-#spotify_client = dotenv_values()
-#spotify_api = SpotifyApi(spotify_client["CLIENT_ID"], spotify_client["CLIENT_SECRET"])
+#
+#import os
+#spotify = spotify_api(os.getenv("CLIENT_ID"), os.getenv("CLIENT_SECRET"))
 #
 #
 #"""
@@ -118,4 +109,4 @@ class SpotifyApi:
 #query = "meteora"
 #search_type = "album"
 #
-#print(json.dumps(spotify_api.get_tracks_info(query, search_type), indent=3))
+#print(json.dumps(spotify.get_search_info(query, search_type), indent=3))
