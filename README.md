@@ -48,13 +48,14 @@ Then, it downloads the result by using yt-dlp.
 |                        | "kon queso"  | The words to search up<br>or a link to a spotify album, artist, playlist or track.
 | `-i` `--client-id`     | "qwertyuiop" | The Spotify Client ID*.
 | `-s` `--client-secret` | "asdfghjkl"  | The Spotify Client Secret*.
-| `-f` `--format`        | "{name} - {authors} ({album})" | The format of the downloaded tracks' names<br>(available fields: {name}, {authors}, {album}, {index}).
+| `-f` `--format`        | "{name} - {authors} ({album})" | The format of the downloaded tracks' names<br>(`--help` to show available fields).
 | `-t` `--type`          | "track"      | When searching up a query, the specified type of content.
 | `-o` `--output`        | "./album/"   | The output path of the downloaded tracks.
 | `-c` `--codec`         | "m4a"        | The audio codec of the downloaded tracks.
 | `-y` `--yes`           |              | Whether to skip the confirmation prompt.
 | `-l` `--slice`         | "2:6"        | The beginning and ending index of the list items to download<br>separated by a colon ":" (1-based).<br>Either one of those indexes can be omitted.
-| `-v` `--verbose`       |              | Whether to include verbose text.
+| `-v` `--verbose`       |              | Whether to display verbose information.
+| `--help`               |              | Show the help message and exit.
 
 *Required if not already found in the environment variables or in the working directory `.env` file.
 
@@ -83,3 +84,7 @@ spotify-dlp https://open.spotify.com/album/1UcS2nqUhxrZjrBZ3tHk2N -i "your_clien
 
 - **2.0.0**:
 <br>- Basically, everything changed. Also added package to PyPI.
+	- **2.0.1**:
+	<br>- Fixed `--verbose` argument not working.
+	<br>- Made youtube search more accurate.
+	<br>- Better error handling.

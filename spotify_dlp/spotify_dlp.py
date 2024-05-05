@@ -1,6 +1,6 @@
 import os, sys, argparse, re
+from yt_dlp import YoutubeDL
 from .spotify_api import spotify_api
-
 
 
 def get_args() -> dict:
@@ -22,7 +22,8 @@ def get_args() -> dict:
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 	parser.add_argument("-l", "--slice", type=str, default=":", help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
 
-	parser.add_argument("-v", "--version", action="version", version="%(prog)s 2.0.0")
+	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information.")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.0.1")
 
 	return vars(parser.parse_args())
 
@@ -40,12 +41,16 @@ def format_track(track: dict, format: str, add_index: bool = False) -> str:
 
 
 def main():
-	### PARSE ARGUMENTS & GET QUERY TRACKS INFO ###
-
-	ARGS = get_args()
-
 	try:
-		spotify = spotify_api(ARGS["client_id"], ARGS["client_secret"])
+		### PARSE ARGUMENTS & GET QUERY TRACKS INFO ###
+
+		ARGS = get_args()
+
+		try:
+			spotify = spotify_api(ARGS["client_id"], ARGS["client_secret"])
+		except:
+			print("ERROR: Couldn't get token. Client ID and/or Client Secret are probably invalid.")
+			sys.exit()
 
 		query = " ".join(ARGS["query"])
 
@@ -55,88 +60,80 @@ def main():
 			tracklist = spotify.get_tracks_info(query)
 
 		tracklist = parse_tracklist(tracklist)
-	except:
-		print("ERROR: Couldn't get token. Client ID and/or Client Secret are probably invalid.")
-		sys.exit()
 
 
 
-	### SLICE TRACKLIST ###
+		### SLICE TRACKLIST ###
 
-	try:
-		begindex, endindex = ARGS["slice"].split(":")
-	except:
-		print("ERROR: Slice argument must include one colon \":\".")
-		sys.exit()
-
-	try:
-		begindex = 0    if (begindex == "" or begindex == "0") else int(begindex)-1
-		endindex = None if (endindex == "" or endindex == "0") else int(endindex)
-
-		tracklist = tracklist[begindex:endindex]
-	except:
-		print("ERROR: Invalid slice argument.")
-		sys.exit()
-
-
-
-	### DISPLAY TRACKS & ASK CONFIRMATION ###
-
-	print()
-
-	print(f"[spotify-dlp] The query you requested contained {len(tracklist)} track(s):")
-	for track in tracklist:
-		print(format_track(track, ARGS["format"], add_index=True))
-
-	if (not ARGS["yes"]):
-		CHOICE = input("\nAre you sure you want to download these tracks? (Y/n)\n").lower()
-
-		CONFIRMED = ["y", "yes"]
-
-		if (CHOICE not in CONFIRMED):
+		try:
+			begindex, endindex = ARGS["slice"].split(":")
+		except:
+			print("ERROR: Slice argument must include one colon \":\".")
 			sys.exit()
 
-	print()
+		try:
+			begindex = 0    if (begindex == "" or begindex == "0") else int(begindex)-1
+			endindex = None if (endindex == "" or endindex == "0") else int(endindex)
+
+			tracklist = tracklist[begindex:endindex]
+		except:
+			print("ERROR: Invalid slice argument.")
+			sys.exit()
 
 
 
-	### DOWNLOAD TRACKS ###
+		### DISPLAY TRACKS & ASK CONFIRMATION ###
 
-	from yt_dlp import YoutubeDL
-	from yt_dlp.postprocessor import FFmpegPostProcessor
-	try:
-		FFmpegPostProcessor._ffmpeg_location.set(sys._MEIPASS)
-	except:
-		pass
+		print()
+
+		print(f"[spotify-dlp] The query you requested contained {len(tracklist)} track(s):")
+		for track in tracklist:
+			print(format_track(track, ARGS["format"], add_index=True))
+
+		if (not ARGS["yes"]):
+			CHOICE = input("\nAre you sure you want to download these tracks? (Y/n)\n").lower()
+
+			CONFIRMED = ["y", "yes"]
+
+			if (CHOICE not in CONFIRMED):
+				sys.exit()
+
+		print()
 
 
-	def download_query(query, ytdlp_opts):
-		with YoutubeDL(ytdlp_opts) as ytdlp:
-			ytdlp.extract_info(f"ytsearch:{query}")["entries"][0]
 
-	DEFAULT_YTDL_OPTS = {
-		"quiet": True,
-		"format": "m4a/bestaudio/best",
-		"postprocessors": [
-			{
-				"key": "FFmpegExtractAudio",
-				"preferredcodec": ARGS["codec"]
-			}
-		],
-		"extractor_args": {
-			"youtube": {
-				"player_client": ["ios", "web"]
-			}
+		### DOWNLOAD TRACKS ###
+
+		DEFAULT_YTDLP_OPTS = {
+			"quiet": not ARGS["verbose"],
+			"format": "m4a/bestaudio/best",
+			"postprocessors": [
+				{
+					"key": "FFmpegExtractAudio",
+					"preferredcodec": ARGS["codec"]
+				}
+			],
+			"extractor_args": {
+				"youtube": {
+					"player_client": ["ios", "web"]
+				}
+			},
+			"noplaylist": True,
+			"playlist_items": "1"
 		}
-	}
 
-	for index, track in enumerate(tracklist, start=1):
-		filename = re.sub(r'[<>:"/\\|?*]', "_", format_track(track, ARGS["format"]))
-		download_query(
-			track["query"],
-			DEFAULT_YTDL_OPTS |
-			{
-				"outtmpl": f"{ARGS['output']}/{filename}.%(ext)s",
+		for index, track in enumerate(tracklist, start=1):
+			filename = re.sub(r'[<>:"/\\|?*]', "_", format_track(track, ARGS["format"]))
+			ytdlp_opts = {
+				"outtmpl": os.path.join(ARGS["output"], filename + ".%(ext)s")
 			}
-		)
-		print(f"[spotify-dlp] Successfully downloaded \"{format_track(track, ARGS['format'])}\"! ({index}/{len(tracklist)})")
+
+			with YoutubeDL(DEFAULT_YTDLP_OPTS | ytdlp_opts) as ytdlp:
+				if ARGS["verbose"]:
+					print(f"[spotify-dlp] Fetching first track found in search query \"{track['query']}\"...")
+				ytdlp.extract_info(f"https://music.youtube.com/search?q={track['query']}")
+
+			print(f"[spotify-dlp] Successfully downloaded \"{format_track(track, ARGS['format'])}\"! ({index}/{len(tracklist)})")
+
+	except KeyboardInterrupt:
+		print("\n[spotify-dlp] Interrupted by user.")
