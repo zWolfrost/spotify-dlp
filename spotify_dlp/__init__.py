@@ -1,7 +1,1 @@
-from . import spotify_dlp
-
-def main():
-	spotify_dlp.main()
-
-if __name__ == "__main__":
-	main()
+from spotify_dlp import spotify_dlp, spotify_api
