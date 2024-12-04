@@ -1,5 +1,6 @@
 import requests, json, re
 import urllib.parse
+from string import Formatter
 
 
 class Track:
@@ -55,6 +56,10 @@ class Track:
    def format(self, format: str) -> str:
       return format.format(**self.get_format_dict())
 
+   def format_with_index(self, format: str) -> str:
+      has_placeholder = lambda f, p: any(n == p for _, n, _, _ in Formatter().parse(f))
+      return self.format(("" if has_placeholder(format, "index") else "{index}. ") + format)
+
 
 class SpotifyAPI:
    def __init__(self, client_id, client_secret):
@@ -88,28 +93,26 @@ class SpotifyAPI:
       match media_type:
          case "album":
             album = self.request_wrapper(f"/albums/{media_id}")
-            result = self.request_wrapper(f"/albums/{media_id}/tracks")
-            for item in result["items"]:
-               item["album"] = {
-                  "name": album["name"],
-                  "release_date": album["release_date"]
-               }
-            info = [Track(item) for item in result["items"]]
+            while len(info) < album["total_tracks"]:
+               result = self.request_wrapper(f"/albums/{media_id}/tracks?limit=50&offset={len(info)}")
+               for item in result["items"]:
+                  item["album"] = album
+               info += [Track(item) for item in result["items"]]
 
          case "artist":
             result = self.request_wrapper(f"/artists/{media_id}/top-tracks?market=US")
-            info = [Track(item) for item in result["tracks"]]
+            info += [Track(item) for item in result["tracks"]]
 
          case "playlist":
             total = 1
             while len(info) < total:
-               result = self.request_wrapper(f"/playlists/{media_id}/tracks?offset={len(info)}")
+               result = self.request_wrapper(f"/playlists/{media_id}/tracks?limit=100&offset={len(info)}")
                total = result["total"]
                info += [Track(item["track"]) for item in result["items"]]
 
          case "track":
             result = self.request_wrapper(f"/tracks?ids={media_id}")
-            info = [Track(item) for item in result["tracks"]]
+            info += [Track(item) for item in result["tracks"]]
 
          case _:
             raise Exception(f"\"{media_type}\" type is not supported.")

@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 setup(
 	name="spotify-dlp",
 	author="zWolfrost",
-	version="2.1.0",
-	description="Command line downloader for spotify tracks, playlists, albums and top artists tracks.",
+	version="2.1.1",
+	description="Command line downloader for spotify tracks, playlists, albums and top artists songs.",
 	long_description=open("README.md").read(),
 	long_description_content_type="text/markdown",
 	url="https://github.com/zWolfrost/spotify-dlp",

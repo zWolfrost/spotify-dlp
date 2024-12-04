@@ -3,7 +3,7 @@
 [![PyPI downloads](https://img.shields.io/pypi/dm/spotify-dlp)](https://pypi.org/project/spotify-dlp/)
 [![GitHub license](https://img.shields.io/github/license/zWolfrost/spotify-dlp)](LICENSE)
 
-Command line downloader for spotify tracks, playlists, albums and top artists tracks.
+Command line downloader for spotify tracks, playlists, albums and top artists songs.
 It works by taking the metadata out of these items using the Spotify API and searching them up on YouTube Music.
 Then, it downloads the result by using yt-dlp.
 
@@ -24,15 +24,15 @@ Then, it downloads the result by using yt-dlp.
 	You can set environment variables by doing the following:
 
 	Windows (run in cmd as administrator):
-	```cmd
+	```sh
 	setx SPOTIFY_DLP_CLIENT_ID "your_client_id"
 	```
-	```cmd
+	```sh
 	setx SPOTIFY_DLP_CLIENT_SECRET "your_client_secret"
 	```
 
 	Linux (add to `~/.bashrc`):
-	```bash
+	```sh
 	export SPOTIFY_DLP_CLIENT_ID="your_client_id"
 	export SPOTIFY_DLP_CLIENT_SECRET="your_client_secret"
 	```
@@ -92,3 +92,6 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 <br>- Added some QOL features.
 <br>- Fixed bug where a playlist with more than 100 tracks would be cut off.
 <br>- Better error handling.
+	- **2.1.1**:
+	<br>- Fixed bug where track indexes would not show.
+	<br>- Fixed bug where an album with more than 50 tracks would be cut off.

@@ -22,7 +22,7 @@ def parse_args() -> dict:
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information.")
-	parser.add_argument("--version", action="version", version="%(prog)s 2.1.0")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.1.1")
 
 	args = parser.parse_args()
 
@@ -86,7 +86,7 @@ def main():
 		tag_print(f"The query you requested contained {len(tracklist)} track(s):")
 		for track in tracklist:
 			try:
-				print(track.format(ARGS.format))
+				print(track.format_with_index(ARGS.format))
 			except KeyError as e:
 				raise Exception(f"Invalid field \"{e.args[0]}\" in format argument. Use \"--format help\" to see available fields.")
 
@@ -111,11 +111,6 @@ def main():
 					"preferredcodec": ARGS.codec
 				}
 			],
-			"extractor_args": {
-				"youtube": {
-					"player_client": ["ios", "web"]
-				}
-			},
 			"noplaylist": True,
 			"playlist_items": "1"
 		}
