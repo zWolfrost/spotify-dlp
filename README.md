@@ -66,7 +66,7 @@ Then, it downloads the result by using yt-dlp.
 spotify-dlp jigsaw falliing into place radiohead
 ```
 ```sh
-spotify-dlp spirit phone -t album -o "%userprofile%\Desktop" -a mp3 -c
+spotify-dlp spirit phone -t album -o "%userprofile%\Desktop" -c mp3 -y
 ```
 ```sh
 spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_client_id" -s "your_client_secret"
@@ -95,3 +95,5 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 	- **2.1.1**:
 	<br>- Fixed bug where track indexes would not show.
 	<br>- Fixed bug where an album with more than 50 tracks would be cut off.
+	- **2.1.2**:
+	<br>- Fixed bug where an error with a track would stop the whole process.

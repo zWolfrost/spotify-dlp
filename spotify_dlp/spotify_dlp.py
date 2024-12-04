@@ -22,7 +22,7 @@ def parse_args() -> dict:
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information.")
-	parser.add_argument("--version", action="version", version="%(prog)s 2.1.1")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.1.2")
 
 	args = parser.parse_args()
 
@@ -118,16 +118,19 @@ def main():
 		for track in tracklist:
 			filename = re.sub(r'[<>:"/\\|?*]', "_", track.format(ARGS.format))
 
-			if ARGS.verbose:
-				tag_print(f"Fetching first track found in search \"{track.keywords}\"...")
-
 			options = DEFAULT_YTDLP_OPTS | {
 				"outtmpl": os.path.join(ARGS.output, filename + ".%(ext)s")
 			}
 
-			YoutubeDL(options).extract_info(f"https://music.youtube.com/search?q={track.keywords}#songs")
+			if ARGS.verbose:
+				tag_print(f"Fetching first track found in search \"{track.keywords}\"...")
 
-			tag_print(f"Successfully downloaded \"{track.format(ARGS.format)}\"! ({track.index}/{len(tracklist)})")
+			try:
+				YoutubeDL(options).extract_info(f"https://music.youtube.com/search?q={track.keywords}#songs")
+			except Exception as e:
+				tag_print(f"Error (skipping track...): {e}")
+			else:
+				tag_print(f"Successfully downloaded \"{track.format(ARGS.format)}\"! ({track.index}/{len(tracklist)})")
 
 	except KeyboardInterrupt:
 		print()
