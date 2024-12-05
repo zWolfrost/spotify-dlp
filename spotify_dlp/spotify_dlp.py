@@ -3,6 +3,23 @@ from yt_dlp import YoutubeDL
 from spotify_dlp.spotify_api import SpotifyAPI
 
 
+class Print(str):
+	ENDC = "\033[0m"
+	FAIL = "\033[91m"
+	WARN = "\033[93m"
+	BOLD = "\033[1m"
+
+	def col(self, color: str):
+		return Print(color + self + Print.ENDC)
+
+	def tag(self):
+		return Print("[spotify-dlp] " + self)
+
+	def prt(self):
+		print(self)
+		return self
+
+
 def parse_args() -> dict:
 	parser = argparse.ArgumentParser(prog="spotify-dlp", description="Command line downloader for spotify tracks, playlists, albums and top artists tracks.")
 
@@ -43,9 +60,6 @@ def parse_args() -> dict:
 
 	return args
 
-def tag_print(message: str):
-	print(f"[spotify-dlp] {message}")
-
 
 def main():
 	try:
@@ -63,9 +77,6 @@ def main():
 		else:
 			tracklist = spotify.items_by_search(ARGS.query, ARGS.type)
 
-
-		### SLICE TRACKLIST ###
-
 		try:
 			tracklist = tracklist[ARGS.slice[0]:ARGS.slice[1]]
 		except ValueError:
@@ -78,22 +89,23 @@ def main():
 			raise Exception("No tracks were found.")
 
 		if ARGS.format == "help":
-			tag_print("Available fields for the format argument:")
+			Print("Available fields for the format argument:").tag().prt()
 			for keys, value in tracklist[0].get_format_dict().items():
-				print("{:>10} {}".format(f"{{{keys}}}:", value))
+				Print("{:>10} {}".format(f"{{{keys}}}:", value)).prt()
 			return
 
-		tag_print(f"The query you requested contained {len(tracklist)} track(s):")
+		Print(f"The query you requested contained {len(tracklist)} track(s):").tag().col(Print.BOLD).prt()
 		for track in tracklist:
 			try:
-				print(track.format_with_index(ARGS.format))
+				Print(track.format_with_index(ARGS.format)).prt()
 			except KeyError as e:
 				raise Exception(f"Invalid field \"{e.args[0]}\" in format argument. Use \"--format help\" to see available fields.")
 
 		if not ARGS.yes:
-			choice = input("\nAre you sure you want to download these tracks? (Y/n)\n")
+			print()
+			choice = input(Print("Are you sure you want to download these tracks? [y/n]\n").tag().col(Print.BOLD))
 
-			if choice.lower() not in ["y", "yes"]:
+			if "y" not in choice.lower():
 				return
 
 		print()
@@ -123,21 +135,20 @@ def main():
 			}
 
 			if ARGS.verbose:
-				tag_print(f"Fetching first track found in search \"{track.keywords}\"...")
+				Print(f"Fetching first track found in search \"{track.keywords}\"...").tag().prt()
 
 			try:
 				YoutubeDL(options).extract_info(f"https://music.youtube.com/search?q={track.keywords}#songs")
 			except Exception as e:
-				tag_print(f"Error (skipping track...): {e}")
+				Print(f"Error: {e}; skipping track #{track.index}...").tag().col(Print.WARN).prt()
 			else:
-				tag_print(f"Successfully downloaded \"{track.format(ARGS.format)}\"! ({track.index}/{len(tracklist)})")
+				Print(f"Successfully downloaded \"{track.format(ARGS.format)}\"! ({track.index}/{len(tracklist)})").tag().prt()
 
 	except KeyboardInterrupt:
-		print()
-		tag_print("Interrupted by user.")
+		Print("Interrupted by user.").tag().col(Print.FAIL).prt()
 
 	except Exception as e:
-		tag_print(f"Error: {e}")
+		Print(f"Error: {e}").tag().col(Print.FAIL).prt()
 
 if __name__ == "__main__":
 	main()
