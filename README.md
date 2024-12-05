@@ -97,3 +97,7 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 	<br>- Fixed bug where an album with more than 50 tracks would be cut off.
 	- **2.1.2**:
 	<br>- Fixed bug where an error with a track would stop the whole process.
+	- **2.1.3**:
+	<br>- Fixed bug where an already downloaded track would be downloaded again.
+	<br>- Added colors to the output.
+	<br>- Minor tweaks.

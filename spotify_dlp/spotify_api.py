@@ -93,35 +93,35 @@ class SpotifyAPI:
 
 
    def items_by_url(self, url: str) -> list[Track]:
-      media_type, media_id = self.parse_url(url)
+      item_type, item_id = self.parse_url(url)
       info = []
 
-      match media_type:
+      match item_type:
          case "album":
-            album = self.request_wrapper(f"/albums/{media_id}")
+            album = self.request_wrapper(f"/albums/{item_id}")
             while len(info) < album["total_tracks"]:
-               result = self.request_wrapper(f"/albums/{media_id}/tracks?limit=50&offset={len(info)}")
+               result = self.request_wrapper(f"/albums/{item_id}/tracks?limit=50&offset={len(info)}")
                for item in result["items"]:
                   item["album"] = album
                info += [Track(item) for item in result["items"]]
 
          case "artist":
-            result = self.request_wrapper(f"/artists/{media_id}/top-tracks?market=US")
+            result = self.request_wrapper(f"/artists/{item_id}/top-tracks?market=US")
             info += [Track(item) for item in result["tracks"]]
 
          case "playlist":
             total = 1
             while len(info) < total:
-               result = self.request_wrapper(f"/playlists/{media_id}/tracks?limit=100&offset={len(info)}")
+               result = self.request_wrapper(f"/playlists/{item_id}/tracks?limit=100&offset={len(info)}")
                total = result["total"]
                info += [Track(item["track"]) for item in result["items"]]
 
          case "track":
-            result = self.request_wrapper(f"/tracks?ids={media_id}")
+            result = self.request_wrapper(f"/tracks?ids={item_id}")
             info += [Track(item) for item in result["tracks"]]
 
          case _:
-            raise Exception(f"\"{media_type}\" type is not supported.")
+            raise NotImplementedError(f"\"{item_type}\" type is not currently supported.")
 
       for index, item in enumerate(info):
          item.index = index + 1
@@ -133,16 +133,15 @@ class SpotifyAPI:
       result = self.request_wrapper(f"/search?q={query}&type={search_type}&limit=1")
       result = list(result.values())[0]["items"]
 
-      if (len(result) == 0): raise Exception("No tracks were found.")
+      if len(result) == 0:
+         return []
 
-      info = self.items_by_url(f"https://open.spotify.com/{search_type}/{result[0]['id']}")
-
-      return info
+      return self.items_by_url(f"spotify:{search_type}:{result[0]['id']}")
 
 
    @staticmethod
    def parse_url(url: str) -> tuple[str, str]:
       try:
-         return re.search(r"(?:.*?open\.spotify\.com/|spotify:)([a-z]+)(?:/|:)(\w+)", url).groups()
+         return re.search(r"(?:open\.spotify\.com/|spotify:)([a-z]+)(?:/|:)(\w+)", url).groups()
       except AttributeError:
          raise ValueError("Invalid URL.")

@@ -43,7 +43,7 @@ def parse_args() -> dict:
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information.")
-	parser.add_argument("--version", action="version", version="%(prog)s 2.1.2")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.1.3")
 
 	args = parser.parse_args()
 
@@ -72,7 +72,7 @@ def parse_args() -> dict:
 
 def main():
 	try:
-		### PARSE ARGUMENTS & GET QUERY TRACKS INFO ###
+		### FETCH TRACKLIST ###
 
 		ARGS = parse_args()
 
@@ -87,19 +87,22 @@ def main():
 			Print("Searching up the query...").tag().prt()
 			tracklist = spotify.items_by_search(ARGS.query, ARGS.type)
 		else:
-			Print("Fetching the URL...").tag().prt()
-			tracklist = spotify.items_by_url(ARGS.query)
-
-		try:
-			tracklist = tracklist[ARGS.slice[0]:ARGS.slice[1]]
-		except ValueError:
-			raise HandledException("Invalid slice argument.")
-
-
-		### DISPLAY TRACKS & ASK CONFIRMATION ###
+			Print("Fetching the query URL...").tag().prt()
+			try:
+				tracklist = spotify.items_by_url(ARGS.query)
+			except NotImplementedError as e:
+				raise HandledException(e)
 
 		if len(tracklist) == 0:
 			raise HandledException("No tracks were found.")
+
+		tracklist = tracklist[ARGS.slice[0]:ARGS.slice[1]]
+
+		if len(tracklist) == 0:
+			raise HandledException(f"The specified slice is out of range.")
+
+
+		### DISPLAY TRACKLIST ###
 
 		if ARGS.format == "help":
 			Print("Available fields for the format argument:").tag().col(Print.BOLD).prt()
@@ -137,9 +140,9 @@ def main():
 			"playlist_items": "1"
 		}
 
-		for track in tracklist:
-			filename = re.sub(r'[<>:"/\\|?*]', "_", track.format(ARGS.format))
-			filepath = os.path.join(ARGS.output, f"{filename}.{ARGS.codec}")
+		for index, track in enumerate(tracklist, start=1):
+			filename = re.sub(r"[/<>:\"\\|?*]", "_", track.format(ARGS.format).strip()) + "." + ARGS.codec
+			filepath = os.path.join(ARGS.output, filename)
 
 			if os.path.exists(filepath):
 				Print(f"File \"{filename}\" already exists; Skipping track #{track.index}...").tag().col(Print.WARN).prt()
@@ -149,15 +152,12 @@ def main():
 				"outtmpl": filepath
 			}
 
-			if ARGS.verbose:
-				Print(f"Fetching first track found in search \"{track.keywords}\"...").tag().prt()
-
 			try:
 				YoutubeDL(options).extract_info(f"https://music.youtube.com/search?q={track.keywords}#songs")
 			except Exception as e:
 				Print(f"Error: {e}; Skipping track #{track.index}...").tag().col(Print.WARN).prt()
 			else:
-				Print(f"Successfully downloaded \"{track.format(ARGS.format)}\"! ({track.index}/{len(tracklist)})").tag().prt()
+				Print(f"Successfully downloaded \"{track.format(ARGS.format)}\"! ({index}/{len(tracklist)})").tag().prt()
 
 	except KeyboardInterrupt:
 		Print("Interrupted by user.").tag().col(Print.FAIL).prt()
