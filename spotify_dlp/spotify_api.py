@@ -13,11 +13,10 @@ class Track:
    entry: int
    index: int
 
-   def __init__(self, item):
-      self.id = item["id"]
-      self.type = item["type"]
-      self.title = item["name"]
-      self.index = None
+   def __init__(self, item={}):
+      self.id = item.get("id")
+      self.type = item.get("type")
+      self.title = item.get("name")
 
       match self.type:
          case "track":
@@ -29,7 +28,14 @@ class Track:
             self.authors = [item["show"]["publisher"]]
             self.album = item["show"]["name"]
             self.date = item["release_date"]
-            self.entry = 0
+            self.entry = None
+         case _:
+            self.authors = []
+            self.album = None
+            self.date = None
+            self.entry = None
+
+      self.index = None
 
 
    @property
@@ -136,5 +142,7 @@ class SpotifyAPI:
 
    @staticmethod
    def parse_url(url: str) -> tuple[str, str]:
-      search = re.search(r"(?:.*?open\.spotify\.com/|spotify:)([a-z]+)(?:/|:)(\w+)", url)
-      return search.groups() if search else None
+      try:
+         return re.search(r"(?:.*?open\.spotify\.com/|spotify:)([a-z]+)(?:/|:)(\w+)", url).groups()
+      except AttributeError:
+         raise ValueError("Invalid URL.")

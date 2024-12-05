@@ -1,6 +1,10 @@
 import os, argparse, re
 from yt_dlp import YoutubeDL
-from spotify_dlp.spotify_api import SpotifyAPI
+from spotify_dlp.spotify_api import SpotifyAPI, Track
+
+
+class HandledException(Exception):
+    pass
 
 
 class Print(str):
@@ -27,14 +31,14 @@ def parse_args() -> dict:
 
 	client_id = os.getenv("SPOTIFY_DLP_CLIENT_ID")
 	client_secret = os.getenv("SPOTIFY_DLP_CLIENT_SECRET")
-	parser.add_argument("-i", "--client-id", type=str, default=client_id, required=(client_id == None), help="The Spotify Client ID.")
-	parser.add_argument("-s", "--client-secret", type=str, default=client_secret, required=(client_secret == None), help="The Spotify Client Secret.")
+	parser.add_argument("-i", "--client-id", type=str, default=client_id, required=(client_id is None), help="The Spotify Client ID.")
+	parser.add_argument("-s", "--client-secret", type=str, default=client_secret, required=(client_secret is None), help="The Spotify Client Secret.")
 
 	parser.add_argument("-f", "--format", type=str, default="{title} - {authors} ({album})", help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
 	parser.add_argument("-t", "--type", type=str, default="track", choices=["album", "artist", "playlist", "track"], help="When searching up a query, the specified type of content.")
 
 	parser.add_argument("-o", "--output", type=str, default=".", help="The output path of the downloaded tracks.")
-	parser.add_argument("-c", "--codec", type=str, default="m4a", help="The audio codec of the downloaded tracks.")
+	parser.add_argument("-c", "--codec", type=str, default="m4a", choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks.")
 	parser.add_argument("-l", "--slice", type=str, default=":", help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
@@ -56,7 +60,12 @@ def parse_args() -> dict:
 
 		args.slice = (begindex, endindex)
 	except ValueError:
-		raise Exception("Invalid slice argument.")
+		raise HandledException("Invalid slice argument.")
+
+	try:
+		Track().format_with_index(args.format)
+	except KeyError as e:
+		raise HandledException(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.")
 
 	return args
 
@@ -70,36 +79,37 @@ def main():
 		try:
 			spotify = SpotifyAPI(ARGS.client_id, ARGS.client_secret)
 		except Exception as e:
-			raise Exception("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.")
+			raise HandledException("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.")
 
-		if SpotifyAPI.parse_url(ARGS.query):
-			tracklist = spotify.items_by_url(ARGS.query)
-		else:
+		try:
+			SpotifyAPI.parse_url(ARGS.query)
+		except ValueError:
+			Print("Searching up the query...").tag().prt()
 			tracklist = spotify.items_by_search(ARGS.query, ARGS.type)
+		else:
+			Print("Fetching the URL...").tag().prt()
+			tracklist = spotify.items_by_url(ARGS.query)
 
 		try:
 			tracklist = tracklist[ARGS.slice[0]:ARGS.slice[1]]
 		except ValueError:
-			raise Exception("Invalid slice argument.")
+			raise HandledException("Invalid slice argument.")
 
 
 		### DISPLAY TRACKS & ASK CONFIRMATION ###
 
 		if len(tracklist) == 0:
-			raise Exception("No tracks were found.")
+			raise HandledException("No tracks were found.")
 
 		if ARGS.format == "help":
-			Print("Available fields for the format argument:").tag().prt()
+			Print("Available fields for the format argument:").tag().col(Print.BOLD).prt()
 			for keys, value in tracklist[0].get_format_dict().items():
 				Print("{:>10} {}".format(f"{{{keys}}}:", value)).prt()
 			return
 
 		Print(f"The query you requested contained {len(tracklist)} track(s):").tag().col(Print.BOLD).prt()
 		for track in tracklist:
-			try:
-				Print(track.format_with_index(ARGS.format)).prt()
-			except KeyError as e:
-				raise Exception(f"Invalid field \"{e.args[0]}\" in format argument. Use \"--format help\" to see available fields.")
+			Print(track.format_with_index(ARGS.format)).prt()
 
 		if not ARGS.yes:
 			print()
@@ -129,9 +139,14 @@ def main():
 
 		for track in tracklist:
 			filename = re.sub(r'[<>:"/\\|?*]', "_", track.format(ARGS.format))
+			filepath = os.path.join(ARGS.output, f"{filename}.{ARGS.codec}")
+
+			if os.path.exists(filepath):
+				Print(f"File \"{filename}\" already exists; Skipping track #{track.index}...").tag().col(Print.WARN).prt()
+				continue
 
 			options = DEFAULT_YTDLP_OPTS | {
-				"outtmpl": os.path.join(ARGS.output, filename + ".%(ext)s")
+				"outtmpl": filepath
 			}
 
 			if ARGS.verbose:
@@ -140,14 +155,14 @@ def main():
 			try:
 				YoutubeDL(options).extract_info(f"https://music.youtube.com/search?q={track.keywords}#songs")
 			except Exception as e:
-				Print(f"Error: {e}; skipping track #{track.index}...").tag().col(Print.WARN).prt()
+				Print(f"Error: {e}; Skipping track #{track.index}...").tag().col(Print.WARN).prt()
 			else:
 				Print(f"Successfully downloaded \"{track.format(ARGS.format)}\"! ({track.index}/{len(tracklist)})").tag().prt()
 
 	except KeyboardInterrupt:
 		Print("Interrupted by user.").tag().col(Print.FAIL).prt()
 
-	except Exception as e:
+	except HandledException as e:
 		Print(f"Error: {e}").tag().col(Print.FAIL).prt()
 
 if __name__ == "__main__":
