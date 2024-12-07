@@ -146,7 +146,7 @@ def main():
 		}
 
 		for index, track in enumerate(tracklist, start=1):
-			filename = re.sub(r"[/<>:\"\\|?*]", "_", track.format(ARGS.format).strip()) + "." + ARGS.codec
+			filename = re.sub(r"[/<>:\"\\|?*]", "_", track.format(ARGS.format).strip())
 			filepath = os.path.join(ARGS.output, filename)
 
 			if ARGS.metadata:
@@ -161,12 +161,12 @@ def main():
 						if ARGS.verbose:
 							Print(f"Successfully downloaded the cover for \"{track.album}\"!").tag().prt()
 
-			if os.path.exists(filepath):
+			if os.path.exists(f"{filepath}.m4a") or os.path.exists(f"{filepath}.{ARGS.codec}"):
 				Print(f"File \"{filename}\" already exists; Skipping track #{track.index}...").tag().col(Print.WARN).prt()
 				continue
 
 			options = DEFAULT_YTDLP_OPTS | {
-				"outtmpl": filepath
+				"outtmpl": filepath + ".%(ext)s"
 			}
 
 			try:

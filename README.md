@@ -105,3 +105,4 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 - **2.2.0**:
 	<br>- Added `--metadata` argument, which allows cover downloading.
 	<br>- Fixed bug where a playlist with an episode in it would error out.
+	<br>- Fixed bug where the -c argument would give files double extensions.
