@@ -3,7 +3,7 @@ from yt_dlp import YoutubeDL
 from spotify_dlp.spotify_api import SpotifyAPI, Item
 
 
-class HandledException(Exception):
+class HandledError(Exception):
     pass
 
 
@@ -62,12 +62,12 @@ def parse_args() -> dict:
 
 		args.slice = (begindex, endindex)
 	except ValueError:
-		raise HandledException("Invalid slice argument.")
+		raise HandledError("Invalid slice argument.")
 
 	try:
 		Item().format_with_index(args.format)
 	except KeyError as e:
-		raise HandledException(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.")
+		raise HandledError(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.")
 
 	return args
 
@@ -81,7 +81,7 @@ def main():
 		try:
 			spotify = SpotifyAPI(ARGS.client_id, ARGS.client_secret)
 		except Exception as e:
-			raise HandledException("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.")
+			raise HandledError("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.")
 
 		try:
 			SpotifyAPI.parse_url(ARGS.query)
@@ -93,15 +93,15 @@ def main():
 			try:
 				tracklist = spotify.items_by_url(ARGS.query)
 			except NotImplementedError as e:
-				raise HandledException(e)
+				raise HandledError(e)
 
 		if len(tracklist) == 0:
-			raise HandledException("No tracks were found.")
+			raise HandledError("No tracks were found.")
 
 		tracklist = tracklist[ARGS.slice[0]:ARGS.slice[1]]
 
 		if len(tracklist) == 0:
-			raise HandledException(f"The specified slice is out of range.")
+			raise HandledError(f"The specified slice is out of range.")
 
 
 		### DISPLAY TRACKLIST ###
@@ -179,7 +179,7 @@ def main():
 	except KeyboardInterrupt:
 		Print("Interrupted by user.").tag().col(Print.FAIL).prt()
 
-	except HandledException as e:
+	except HandledError as e:
 		Print(f"Error: {e}").tag().col(Print.FAIL).prt()
 
 if __name__ == "__main__":
