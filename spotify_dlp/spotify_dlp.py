@@ -1,6 +1,6 @@
-import os, argparse, re
+import os, argparse, re, requests
 from yt_dlp import YoutubeDL
-from spotify_dlp.spotify_api import SpotifyAPI, Track
+from spotify_dlp.spotify_api import SpotifyAPI, Item
 
 
 class HandledException(Exception):
@@ -36,14 +36,16 @@ def parse_args() -> dict:
 
 	parser.add_argument("-f", "--format", type=str, default="{title} - {authors} ({album})", help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
 	parser.add_argument("-t", "--type", type=str, default="track", choices=["album", "artist", "playlist", "track"], help="When searching up a query, the specified type of content.")
+	parser.add_argument("-l", "--slice", type=str, default=":", help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
 
 	parser.add_argument("-o", "--output", type=str, default=".", help="The output path of the downloaded tracks.")
 	parser.add_argument("-c", "--codec", type=str, default="m4a", choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks.")
-	parser.add_argument("-l", "--slice", type=str, default=":", help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
+	parser.add_argument("-m", "--metadata", action="store_true", help="Whether to download metadata (such as covers).")
+
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information.")
-	parser.add_argument("--version", action="version", version="%(prog)s 2.1.3")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.2.0")
 
 	args = parser.parse_args()
 
@@ -63,7 +65,7 @@ def parse_args() -> dict:
 		raise HandledException("Invalid slice argument.")
 
 	try:
-		Track().format_with_index(args.format)
+		Item().format_with_index(args.format)
 	except KeyError as e:
 		raise HandledException(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.")
 
@@ -126,6 +128,9 @@ def main():
 
 		### DOWNLOAD TRACKS ###
 
+		if not os.path.exists(ARGS.output):
+			os.makedirs(ARGS.output)
+
 		DEFAULT_YTDLP_OPTS = {
 			"quiet": not ARGS.verbose,
 			"no_warnings": not ARGS.verbose,
@@ -143,6 +148,18 @@ def main():
 		for index, track in enumerate(tracklist, start=1):
 			filename = re.sub(r"[/<>:\"\\|?*]", "_", track.format(ARGS.format).strip()) + "." + ARGS.codec
 			filepath = os.path.join(ARGS.output, filename)
+
+			if ARGS.metadata:
+				coverpath = os.path.join(ARGS.output, f"{track.album}.jpg")
+				if not os.path.exists(coverpath):
+					try:
+						img_data = requests.get(track.cover).content
+						open(coverpath, "wb").write(img_data)
+					except Exception as e:
+						Print(f"An error was encountered while trying to download the cover for \"{track.album}\": {e}").tag().col(Print.WARN).prt()
+					else:
+						if ARGS.verbose:
+							Print(f"Successfully downloaded the cover for \"{track.album}\"!").tag().prt()
 
 			if os.path.exists(filepath):
 				Print(f"File \"{filename}\" already exists; Skipping track #{track.index}...").tag().col(Print.WARN).prt()

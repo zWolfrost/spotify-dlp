@@ -50,9 +50,10 @@ Then, it downloads the result by using yt-dlp.
 | `-s` `--client-secret` | "asdfghjkl"                    | The Spotify Client Secret*.
 | `-f` `--format`        | "{name} - {authors} ({album})" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
 | `-t` `--type`          | "track"                        | When searching up a query,<br>the specified type of content.
+| `-l` `--slice`         | "2:6"                          | The beginning and ending index of the list items<br>to download, separated by a colon ":" (1-based).<br>Either one of those indexes can be omitted.
 | `-o` `--output`        | "./album/"                     | The output path of the downloaded tracks.
 | `-c` `--codec`         | "m4a"                          | The audio codec of the downloaded tracks.
-| `-l` `--slice`         | "2:6"                          | The beginning and ending index of the list items<br>to download, separated by a colon ":" (1-based).<br>Either one of those indexes can be omitted.
+| `-m` `--metadata`      |                                | Whether to download metadata (such as covers).
 | `-y` `--yes`           |                                | Whether to skip the confirmation prompt.
 | `-v` `--verbose`       |                                | Whether to display verbose information.
 | `-h` `--help`          |                                | Show the help message and exit.
@@ -101,3 +102,6 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 	<br>- Fixed bug where an already downloaded track would be downloaded again.
 	<br>- Added colors to the output.
 	<br>- Minor tweaks.
+- **2.2.0**:
+	<br>- Added `--metadata` argument, which allows cover downloading.
+	<br>- Fixed bug where a playlist with an episode in it would error out.
