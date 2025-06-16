@@ -96,3 +96,5 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 <br>- Added `--auth` argument, which allows for easy PKCE/browser authentication.
 <br>- Way more accurate youtube search (but a little slower)
 <br>- Better error handling.
+	- **2.3.1**:
+	<br>- Fix windows path issues and terminal colors.
