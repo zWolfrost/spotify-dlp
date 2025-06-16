@@ -198,10 +198,10 @@ def main():
 				tag_print(f"Searching for track \"{track.format(args.format)}\"...\r", end="")
 
 				search_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(track.keywords)}&sp=CAMSAhAB"
-				entries = yt_dlp.YoutubeDL(options | {"playlistend": 5}).extract_info(search_url, download=False)["entries"]
+				entries = yt_dlp.YoutubeDL(options | {"playlistend": 5, "extract_flat": True}).extract_info(search_url, download=False)["entries"]
 
 				if len(entries) == 0:
-					entries = yt_dlp.YoutubeDL(options).extract_info(f"ytsearch5:{track.keywords}", download=False)["entries"]
+					entries = yt_dlp.YoutubeDL(options | {"playlistend": 5, "extract_flat": True}).extract_info(f"ytsearch5:{track.keywords}", download=False)["entries"]
 					entries = sorted(entries, key=lambda s: s.get("view_count", 0), reverse=True)
 
 				if len(entries) == 0:
