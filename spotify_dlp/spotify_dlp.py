@@ -187,13 +187,13 @@ def main():
 
 			options = DEFAULT_YTDLP_OPTS | {
 				"outtmpl": filepath + ".%(ext)s",
-				"match_filter": yt_dlp.utils.match_filter_func(f"duration>{track.duration-5} & duration<{track.duration+5}")
+				"match_filter": yt_dlp.utils.match_filter_func(f"duration>{track.duration-3} & duration<{track.duration+3}")
 			}
 
 			try:
 				tag_print(f"Searching for track \"{track.format(args.format)}\"...\r", end="")
 
-				search_url = f"https://www.youtube.com/results?search_query={urllib.parse.unquote_plus(track.keywords)}&sp=CAMSAhAB"
+				search_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(track.keywords)}&sp=CAMSAhAB"
 				entries = yt_dlp.YoutubeDL(options | {"playlistend": 5}).extract_info(search_url, download=False)["entries"]
 
 				if len(entries) == 0:
