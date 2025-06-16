@@ -135,12 +135,15 @@ def main():
 
 		if not args.yes:
 			print()
-			choice = tag_print("Are you sure you want to download these tracks? [y/N]\n", color=Colors.BOLD, prompt=True)
+			choice = tag_print("Are you sure you want to download these tracks? [Y/n]\n", color=Colors.BOLD, prompt=True)
 
-			if "y" not in choice.lower():
+			if "n" in choice.lower():
 				return
 
-		print()
+			if choice:
+				print()
+		else:
+			print()
 
 
 		### DOWNLOAD TRACKS ###
@@ -191,17 +194,16 @@ def main():
 				tag_print(f"Searching for track \"{track.format(args.format)}\"...\r", end="")
 
 				search_url = f"https://www.youtube.com/results?search_query={urllib.parse.unquote_plus(track.keywords)}&sp=CAMSAhAB"
-				search = yt_dlp.YoutubeDL(options | {"playlistend": 3}).extract_info(search_url, download=False)["entries"]
+				entries = yt_dlp.YoutubeDL(options | {"playlistend": 5}).extract_info(search_url, download=False)["entries"]
 
-				if len(search) == 0:
-					tag_print(f"Searching deeper for track \"{track.format(args.format)}\"...\r", end="")
-					search = yt_dlp.YoutubeDL(options).extract_info(f"ytsearch5:{track.keywords}", download=False)["entries"]
-					search = sorted(search, key=lambda s: s.get("view_count", 0), reverse=True)
+				if len(entries) == 0:
+					entries = yt_dlp.YoutubeDL(options).extract_info(f"ytsearch5:{track.keywords}", download=False)["entries"]
+					entries = sorted(entries, key=lambda s: s.get("view_count", 0), reverse=True)
 
-				if len(search) == 0:
+				if len(entries) == 0:
 					raise HandledError(f"No results found for track \"{track.format(args.format)}\".")
 
-				id = search[0]["id"]
+				id = entries[0]["id"]
 
 				yt_dlp.YoutubeDL(options).download([id])
 			except Exception as e:
