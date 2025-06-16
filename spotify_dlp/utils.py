@@ -38,8 +38,8 @@ class TokenFile():
 
 	@staticmethod
 	def write_token(name: str, token: str):
-		if not os.path.exists(os.path.dirname(TokenFile.get_token_filepath())):
-			os.makedirs(os.path.dirname(TokenFile.get_token_filepath()))
+		if not os.path.exists(TokenFile.get_token_filepath()):
+			os.mkdir(TokenFile.get_token_filepath())
 
-		with open(os.path.join(TokenFile.get_token_filepath(), name), "w") as f:
+		with open(os.path.join(TokenFile.get_token_filepath(), name), "w+") as f:
 			f.write(token)

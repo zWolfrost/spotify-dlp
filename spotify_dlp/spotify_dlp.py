@@ -69,6 +69,10 @@ def write_all_tokens(spotify: SpotifyAPI):
 
 def main():
 	try:
+		# Add color support for Windows terminals
+		if os.name == "nt":
+			os.system("")
+
 		args = init_args()
 		args = parse_args(args)
 
