@@ -5,8 +5,8 @@
 
 Command line downloader for spotify tracks, playlists, albums and top artists songs.
 It works by taking the metadata out of these items using the Spotify API and searching them up on YouTube.
-Then, it downloads the result by using yt-dlp.
-
+Then, it downloads the result by using `yt-dlp`.
+**This technically means that the tracks have a *really* small chance to be incorrect.**
 
 &nbsp;
 ## Installation
