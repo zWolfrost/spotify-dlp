@@ -1,6 +1,12 @@
 import requests, json, re
-import urllib.parse
 from string import Formatter
+
+# PKCE Flow Imports
+import string, base64, random, hashlib, http.server
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
+
+
+PKCE_APP_CLIENT_ID = "8e70634824f842519e666d1fefa91fd0"
 
 
 class Item:
@@ -52,7 +58,7 @@ class Item:
 
    @property
    def keywords(self):
-      return urllib.parse.quote_plus(f"{self.title} {' '.join(self.authors)} {self.album}")
+      return f"{self.title} {' '.join(self.authors)} {self.album}"
 
 
    def get_format_dict(self) -> dict:
@@ -70,17 +76,107 @@ class Item:
 
 
 class SpotifyAPI:
-   def __init__(self, client_id, client_secret):
-      headers = {"Content-Type": "application/x-www-form-urlencoded"}
-      data = f"grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}"
+   token: str = None
 
-      result = requests.post("https://accounts.spotify.com/api/token", headers=headers, data=data)
+   def __init__(self, token: str):
+      if not token:
+         raise ValueError("Token cannot be None or empty.")
+      self.token = token
 
-      content = json.loads(result.content)
+   @classmethod
+   def from_client_credentials_flow(cls, client_id, client_secret):
+      res = requests.post(
+         "https://accounts.spotify.com/api/token",
+         headers={"Content-Type": "application/x-www-form-urlencoded"},
+         data=urlencode({
+            "grant_type": "client_credentials",
+            "client_id": client_id,
+            "client_secret": client_secret,
+         })
+      )
+
+      content = json.loads(res.content)
       if "error" in content:
          raise Exception(content["error"])
 
-      self.token = json.loads(result.content)["access_token"]
+      token = json.loads(res.content)["access_token"]
+
+      return cls(token)
+
+   @classmethod
+   def from_pkce_flow(cls, client_id: str = PKCE_APP_CLIENT_ID):
+      def random_string(length: int = 16) -> str:
+         CHARS = string.ascii_uppercase + string.ascii_lowercase + string.digits
+         return ''.join(random.choice(CHARS) for _ in range(length))
+
+      def generate_code_challenge(code_verifier: str) -> str:
+         digest = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+         return base64.urlsafe_b64encode(digest).decode('utf-8').rstrip('=')
+
+      def add_url_params(url, params):
+         url_parts = list(urlparse(url))
+         query = dict(parse_qsl(url_parts[4]))
+         query.update(params)
+         url_parts[4] = urlencode(query)
+         return urlunparse(url_parts)
+
+      class HttpSpotifyAuthHandler(http.server.BaseHTTPRequestHandler):
+         auth_code: str = None
+
+         def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.server.auth_code = dict(parse_qsl(urlparse(self.path).query)).get("code")
+
+            if self.server.auth_code:
+               self.wfile.write(b"Authentication successful! You can close this window.")
+            else:
+               self.wfile.write(b"No authentication code received. Please try again.")
+
+         def log_message(self, format, *args):
+            return
+
+      PORT = 3000
+      REDIRECT_URI = f"http://127.0.0.1:{PORT}/"
+
+      CODE_VERIFIER = random_string(64)
+      AUTH_URL = add_url_params("https://accounts.spotify.com/authorize", {
+         "client_id": client_id,
+         "response_type": "code",
+         "redirect_uri": REDIRECT_URI,
+         "scope": "user-library-read",
+         "code_challenge_method": "S256",
+         "code_challenge": generate_code_challenge(CODE_VERIFIER),
+      })
+
+      print(AUTH_URL)
+
+      httpd = http.server.HTTPServer(("127.0.0.1", PORT), HttpSpotifyAuthHandler)
+      httpd.handle_request()
+      AUTH_CODE = httpd.auth_code
+
+      if not AUTH_CODE:
+         raise Exception("No authentication code received. Please try again.")
+
+      res = requests.post(
+         "https://accounts.spotify.com/api/token",
+         headers={"Content-Type": "application/x-www-form-urlencoded"},
+         data=urlencode({
+            "client_id": client_id,
+            "grant_type": "authorization_code",
+            "code": AUTH_CODE,
+            "redirect_uri": REDIRECT_URI,
+            "code_verifier": CODE_VERIFIER,
+         })
+      )
+
+      token = json.loads(res.content).get("access_token")
+
+      if not token:
+         raise Exception("No access token received. Please try again.")
+
+      return cls(token)
 
 
    def request_wrapper(self, endpoint: str) -> dict:
@@ -112,10 +208,13 @@ class SpotifyAPI:
             for item in result["tracks"]:
                info.append(Item(item))
 
-         case "playlist":
+         case "playlist" | "saved":
             total = None
             while total is None or len(info) < total:
-               result = self.request_wrapper(f"/playlists/{item_id}/tracks?limit=100&offset={len(info)}")
+               result = self.request_wrapper(
+                  f"/playlists/{item_id}/tracks?limit=100&offset={len(info)}" if item_type == "playlist" else
+                  f"/me/tracks?limit=50&offset={len(info)}" if item_type in ("liked", "saved") else ""
+               )
                if total is None:
                   total = result["total"]
                for item in result["items"]:
@@ -150,6 +249,8 @@ class SpotifyAPI:
    @staticmethod
    def parse_url(url: str) -> tuple[str, str]:
       try:
+         if url in ("saved", ):
+            return url, None
          return re.search(r"(?:open\.spotify\.com/|spotify:)([a-z]+)(?:/|:)(\w+)", url).groups()
       except AttributeError:
          raise ValueError("Invalid URL.")

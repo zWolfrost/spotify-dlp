@@ -4,7 +4,7 @@
 [![GitHub license](https://img.shields.io/github/license/zWolfrost/spotify-dlp)](LICENSE)
 
 Command line downloader for spotify tracks, playlists, albums and top artists songs.
-It works by taking the metadata out of these items using the Spotify API and searching them up on YouTube Music.
+It works by taking the metadata out of these items using the Spotify API and searching them up on YouTube.
 Then, it downloads the result by using yt-dlp.
 
 
@@ -15,50 +15,35 @@ Then, it downloads the result by using yt-dlp.
 	pip install spotify-dlp
 	```
 
-2. Then, login to [Spotify developer console](https://developer.spotify.com/dashboard) and click on "Create an App". Fill in details for name and description.
-
-3. Make a note of Client ID and Client Secret. These values need to be then set to the `SPOTIFY_DLP_CLIENT_ID` and `SPOTIFY_DLP_CLIENT_SECRET` environment variables respectively
-
-	Alternatively, you can also include them in a `.env` file in the working directory, or even directly pass them as arguments.
-
-	You can set environment variables by doing the following:
-
-	Windows (run in cmd as administrator):
-	```sh
-	setx SPOTIFY_DLP_CLIENT_ID "your_client_id"
+2. Then, you can authenticate your Spotify account by running the following command:
+	```bash
+	spotify-dlp --auth
 	```
-	```sh
-	setx SPOTIFY_DLP_CLIENT_SECRET "your_client_secret"
-	```
+	The program will print out an URL. Open it in a browser, log in to your Spotify account and allow the app to access your data. The authentication token should be saved automatically and should get used for future commands.
 
-	Linux (add to `~/.bashrc`):
-	```sh
-	export SPOTIFY_DLP_CLIENT_ID="your_client_id"
-	export SPOTIFY_DLP_CLIENT_SECRET="your_client_secret"
-	```
+&nbsp;
 
-4. You can now use the script by running `spotify-dlp` in the command line.
-	Also, ffmpeg is required if you wish to convert the m4a codec to another one using the `-c` argument.
-
+*If you do not want to authenticate, you can pass your Client ID and Client Secret as arguments, every command. You can get these values by logging to [Spotify developer console](https://developer.spotify.com/dashboard) and clicking on "Create an App", and you can pass them using the `-i` and `-s` arguments, respectively.*
 
 &nbsp;
 ## Arguments
-| Command                | Example                        | Description
-|:-:                     |:-:                             |:-
-|                        | "kon queso"                    | The words to search up<br>or a link to a spotify album, artist, playlist or track.
-| `-i` `--client-id`     | "qwertyuiop"                   | The Spotify Client ID*.
-| `-s` `--client-secret` | "asdfghjkl"                    | The Spotify Client Secret*.
-| `-f` `--format`        | "{name} - {authors} ({album})" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
-| `-t` `--type`          | "track"                        | When searching up a query,<br>the specified type of content.
-| `-l` `--slice`         | "2:6"                          | The beginning and ending index of the list items<br>to download, separated by a colon ":" (1-based).<br>Either one of those indexes can be omitted.
-| `-o` `--output`        | "./album/"                     | The output path of the downloaded tracks.
-| `-c` `--codec`         | "m4a"                          | The audio codec of the downloaded tracks.
-| `-m` `--metadata`      |                                | Whether to download metadata (such as covers).
-| `-y` `--yes`           |                                | Whether to skip the confirmation prompt.
-| `-v` `--verbose`       |                                | Whether to display verbose information.
-| `-h` `--help`          |                                | Show the help message and exit.
+| Command                | Example              | Description
+|:-:                     |:-:                   |:-
+|                        | "kon queso"          | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>If \"saved\", download the user's saved tracks.
+| `-a` `--auth`          |                      | Authenticate using the Client ID and Client Secret.<br>After running this command, you will be prompted to log in to Spotify.
+| `-i` `--client-id`     | "qwertyuiop"         | The Spotify Client ID*.
+| `-s` `--client-secret` | "asdfghjkl"          | The Spotify Client Secret*.
+| `-f` `--format`        | "{name} - {authors}" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
+| `-t` `--type`          | "track"              | When searching up a query,<br>the specified type of content.
+| `-l` `--slice`         | "2:6"                | The beginning and ending index of the list items<br>to download, separated by a colon ":" (1-based).<br>Either one of those indexes can be omitted.
+| `-o` `--output`        | "./album/"           | The output path of the downloaded tracks.
+| `-c` `--codec`         | "m4a"                | The audio codec of the downloaded tracks.
+| `-m` `--metadata`      |                      | Whether to download metadata (such as covers).
+| `-y` `--yes`           |                      | Whether to skip the confirmation prompt.
+| `-v` `--verbose`       |                      | Whether to display verbose information.
+| `-h` `--help`          |                      | Show the help message and exit.
 
-*Required if not already found in the environment variables or in the working directory `.env` file.
+*Required if not authenticated via the `spotify-dlp --auth` command.
 
 
 &nbsp;
