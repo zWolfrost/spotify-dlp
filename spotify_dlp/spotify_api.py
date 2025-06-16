@@ -127,7 +127,7 @@ class SpotifyAPI:
 				self.server.auth_code = dict(parse_qsl(urlparse(self.path).query)).get("code")
 
 				if self.server.auth_code:
-					self.wfile.write(b"Authentication successful! You can close this window.")
+					self.wfile.write(b"Authentication successful! You can close this window now.")
 				else:
 					self.wfile.write(b"No authentication code received. Please try again.")
 

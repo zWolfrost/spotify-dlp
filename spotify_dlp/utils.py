@@ -19,11 +19,16 @@ class Colors():
 	BOLD = "\033[1m"
 
 class TokenFile():
-	token_filepath: str = os.path.expanduser("~/.config/spotify-dlp/")
+	@staticmethod
+	def get_token_filepath() -> str:
+		if os.name == "nt":
+			return os.path.join(os.getenv("APPDATA"), "spotify-dlp")
+		else:
+			return os.path.expanduser("~/.config/spotify-dlp/")
 
 	@staticmethod
 	def read_token(name: str) -> str:
-		filepath = os.path.join(TokenFile.token_filepath, name)
+		filepath = os.path.join(TokenFile.get_token_filepath(), name)
 
 		if not os.path.exists(filepath):
 			return None
@@ -33,8 +38,8 @@ class TokenFile():
 
 	@staticmethod
 	def write_token(name: str, token: str):
-		if not os.path.exists(os.path.dirname(TokenFile.token_filepath)):
-			os.makedirs(os.path.dirname(TokenFile.token_filepath))
+		if not os.path.exists(os.path.dirname(TokenFile.get_token_filepath())):
+			os.makedirs(os.path.dirname(TokenFile.get_token_filepath()))
 
-		with open(os.path.join(TokenFile.token_filepath, name), "w") as f:
+		with open(os.path.join(TokenFile.get_token_filepath(), name), "w") as f:
 			f.write(token)
