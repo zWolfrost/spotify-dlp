@@ -19,28 +19,28 @@ Then, it downloads the result by using yt-dlp.
 	```bash
 	spotify-dlp --auth
 	```
-	The program will print out an URL. Open it in a browser, log in to your Spotify account and allow the app to access your data. The authentication token should be saved automatically and should get used for future commands.
+	This command will cause the program to print out an URL. Open it in a browser, log in to your Spotify account and allow the app to access your data. The authentication token should be saved automatically and should get used for future commands.
 
 &nbsp;
 
-*If you do not want to authenticate, you can pass your Client ID and Client Secret as arguments, every command. You can get these values by logging to [Spotify developer console](https://developer.spotify.com/dashboard) and clicking on "Create an App", and you can pass them using the `-i` and `-s` arguments, respectively.*
+*If you do not want to authenticate using the browser, you can manually pass your Client ID and Client Secret as arguments every command. You can get these values by logging to [Spotify developer console](https://developer.spotify.com/dashboard) and clicking on "Create an App", and you can pass them using the `-i` and `-s` arguments, respectively.*
 
 &nbsp;
 ## Arguments
 | Command                | Example              | Description
 |:-:                     |:-:                   |:-
 |                        | "earfquake"          | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>If \"saved\", download the user's saved tracks.
-| `-a` `--auth`          |                      | Authenticate using the Client ID and Client Secret.<br>After running this command, you will be prompted to log in to Spotify.
+| `-a` `--auth`          |                      | Authenticate using the PKCE flow and exit.
 | `-i` `--client-id`     | "qwertyuiop"         | The Spotify Client ID*.
 | `-s` `--client-secret` | "asdfghjkl"          | The Spotify Client Secret*.
 | `-f` `--format`        | "{name} - {authors}" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
 | `-t` `--type`          | "track"              | When searching up a query,<br>the specified type of content.
 | `-l` `--slice`         | "2:6"                | The beginning and ending index of the list items<br>to download, separated by a colon ":" (1-based).<br>Either one of those indexes can be omitted.
 | `-o` `--output`        | "./album/"           | The output path of the downloaded tracks.
-| `-c` `--codec`         | "mp3"                | The audio codec of the downloaded tracks.<br>By default, it is the same as the yt-dlp default for `bestaudio`.
+| `-c` `--codec`         | "mp3"                | The audio codec of the downloaded tracks.<br>By default, it is unchanged from the one `yt-dlp` downloads.<br>Requires `ffmpeg` to be installed.
 | `-m` `--metadata`      |                      | Whether to download metadata (such as covers).
 | `-y` `--yes`           |                      | Whether to skip the confirmation prompt.
-| `-v` `--verbose`       |                      | Whether to display verbose information.
+| `-v` `--verbose`       |                      | Whether to display verbose information and full errors.
 | `-h` `--help`          |                      | Show the help message and exit.
 
 *Required if not authenticated via the `spotify-dlp --auth` command.

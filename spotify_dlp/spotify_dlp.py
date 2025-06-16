@@ -9,7 +9,7 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("query", type=str, nargs=argparse.ZERO_OR_MORE, help="The words to search up or a link to a spotify album, artist, playlist or track. If \"saved\", download the user's saved tracks (requires browser authentication).")
 
 	# ENV IS DEPRECATED!
-	parser.add_argument("-a", "--auth", action="store_true", help="Whether to authenticate using the PKCE flow and exit.")
+	parser.add_argument("-a", "--auth", action="store_true", help="Authenticate using the PKCE flow and exit.")
 	parser.add_argument("-i", "--client-id", type=str, default=os.getenv("SPOTIFY_DLP_CLIENT_ID"), help="The Spotify Client ID.")
 	parser.add_argument("-s", "--client-secret", type=str, default=os.getenv("SPOTIFY_DLP_CLIENT_SECRET"), help="The Spotify Client Secret.")
 
@@ -18,12 +18,12 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-l", "--slice", type=str, default=":", help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
 
 	parser.add_argument("-o", "--output", type=str, default=".", help="The output path of the downloaded tracks.")
-	parser.add_argument("-c", "--codec", type=str, default="", choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks.")
+	parser.add_argument("-c", "--codec", type=str, default="", choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks. By default, it is unchanged from the one \"yt-dlp\" downloads. Requires \"ffmpeg\" to be installed.")
 	parser.add_argument("-m", "--metadata", action="store_true", help="Whether to download metadata (such as covers).")
 
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
-	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information.")
+	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information and full errors.")
 	parser.add_argument("--version", action="version", version="%(prog)s 2.2.0")
 
 	return parser.parse_args()
