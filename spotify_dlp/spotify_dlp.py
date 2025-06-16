@@ -8,10 +8,9 @@ def init_args() -> argparse.Namespace:
 
 	parser.add_argument("query", type=str, nargs=argparse.ZERO_OR_MORE, help="The words to search up or a link to a spotify album, artist, playlist or track. If \"saved\", download the user's saved tracks (requires browser authentication).")
 
-	# ENV IS DEPRECATED!
 	parser.add_argument("-a", "--auth", action="store_true", help="Authenticate using the PKCE flow and exit.")
-	parser.add_argument("-i", "--client-id", type=str, default=os.getenv("SPOTIFY_DLP_CLIENT_ID"), help="The Spotify Client ID.")
-	parser.add_argument("-s", "--client-secret", type=str, default=os.getenv("SPOTIFY_DLP_CLIENT_SECRET"), help="The Spotify Client Secret.")
+	parser.add_argument("-i", "--client-id", type=str, help="The Spotify Client ID.")
+	parser.add_argument("-s", "--client-secret", type=str, help="The Spotify Client Secret.")
 
 	parser.add_argument("-f", "--format", type=str, default="{title} - {authors} ({album})", help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
 	parser.add_argument("-t", "--type", type=str, default="track", choices=["album", "artist", "playlist", "track"], help="When searching up a query, the specified type of content.")
@@ -57,7 +56,8 @@ def parse_args(args: argparse.Namespace) -> argparse.Namespace:
 			raise HandledError(
 				"Not authenticated.\n"
 				"You can authenticate using the browser by running \"spotify-dlp --auth\".\n"
-				"Alternatively, you can provide your Client ID and Client Secret, both trough command line arguments or environment variables (see README)."
+				"Alternatively, you can provide your Client ID and Client Secret, "
+				"both trough command line arguments or environment variables (see README)."
 			)
 
 	return args
@@ -85,16 +85,16 @@ def main():
 			tag_print(f"Tokens saved to ~/.config/spotify-dlp/", color=Colors.BOLD)
 			return
 
-		if (access_token := TokenFile.read_token("ACCESS_TOKEN")) and (refresh_token := TokenFile.read_token("REFRESH_TOKEN")):
-			tag_print("Authenticating using refreshed saved token...", color=Colors.BOLD)
-			spotify = SpotifyAPI(access_token=access_token, refresh_token=refresh_token)
-			spotify.refresh_pkce_token()
-			write_all_tokens(spotify)
-		else:
+		if args.client_id and args.client_secret:
 			try:
 				spotify = SpotifyAPI.from_client_credentials_flow(args.client_id, args.client_secret)
 			except Exception as e:
 				raise HandledError("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.") from e
+		else:
+			tag_print("Authenticating using refreshed saved token...", color=Colors.BOLD)
+			spotify = SpotifyAPI(access_token=TokenFile.read_token("ACCESS_TOKEN"), refresh_token=TokenFile.read_token("REFRESH_TOKEN"))
+			spotify.refresh_pkce_token()
+			write_all_tokens(spotify)
 
 
 		### FETCH TRACKLIST ###

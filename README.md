@@ -88,6 +88,11 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 	<br>- Added colors to the output.
 	<br>- Minor tweaks.
 - **2.2.0**:
-	<br>- Added `--metadata` argument, which allows cover downloading.
-	<br>- Fixed bug where a playlist with an episode in it would error out.
-	<br>- Fixed bug where the -c argument would give files double extensions.
+<br>- Added `--metadata` argument, which allows cover downloading.
+<br>- Fixed bug where a playlist with an episode in it would error out.
+<br>- Fixed bug where the -c argument would give files double extensions.
+- **2.3.0**:
+<br>- Removed client credentials authentication trough environment variables!
+<br>- Added `--auth` argument, which allows for easy PKCE/browser authentication.
+<br>- Way more accurate youtube search (but a little slower)
+<br>- Better error handling.
