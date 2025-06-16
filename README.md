@@ -61,7 +61,7 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 
 &nbsp;
 ## Screenshots
-![Downloading album](https://i.imgur.com/op4cCJT.png)
+![Downloading album](https://i.imgur.com/DorBju2.png)
 
 
 &nbsp;
