@@ -1,48 +1,10 @@
 import os, argparse, re, requests
 from yt_dlp import YoutubeDL
 from spotify_dlp.spotify_api import SpotifyAPI, Item
+from spotify_dlp.utils import HandledError, tag_print, Colors, TokenFile
 
 
-class HandledError(Exception):
-   pass
-
-class Colors():
-	ENDC = "\033[0m"
-	FAIL = "\033[91m"
-	WARN = "\033[93m"
-	BOLD = "\033[1m"
-
-def tag_print(string: str, color: str = None, prompt: bool = False):
-	TAG = "[spotify-dlp] "
-	string = TAG + string
-
-	if color:
-		string = color + string + Colors.ENDC
-
-	return input(string) if prompt else print(string)
-
-class TokenFile():
-	token_filepath: str = os.path.expanduser("~/.config/spotify-dlp/TOKEN")
-
-	@staticmethod
-	def read_token() -> str:
-		if not os.path.exists(TokenFile.token_filepath):
-			return None
-
-		with open(TokenFile.token_filepath, "r") as f:
-			return f.read().strip()
-
-	@staticmethod
-	def write_token(token: str):
-		if not os.path.exists(os.path.dirname(TokenFile.token_filepath)):
-			os.makedirs(os.path.dirname(TokenFile.token_filepath))
-
-		with open(TokenFile.token_filepath, "w") as f:
-			f.write(token)
-
-		tag_print("Token saved to ~/.config/spotify-dlp/TOKEN", color=Colors.BOLD)
-
-def parse_args() -> dict:
+def init_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(prog="spotify-dlp", description="Command line downloader for spotify tracks, playlists, albums and top artists tracks.")
 
 	parser.add_argument("query", type=str, nargs=argparse.ZERO_OR_MORE, help="The words to search up or a link to a spotify album, artist, playlist or track. If \"saved\", download the user's saved tracks (requires browser authentication).")
@@ -65,8 +27,9 @@ def parse_args() -> dict:
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information.")
 	parser.add_argument("--version", action="version", version="%(prog)s 2.2.0")
 
-	args = parser.parse_args()
+	return parser.parse_args()
 
+def parse_args(args: argparse.Namespace) -> argparse.Namespace:
 	args.query = " ".join(args.query)
 
 	try:
@@ -79,19 +42,19 @@ def parse_args() -> dict:
 		endindex = None if (endindex == "" or endindex == "0") else int(endindex)
 
 		args.slice = (begindex, endindex)
-	except ValueError:
-		raise HandledError("Invalid slice argument.")
+	except ValueError as e:
+		raise HandledError("Invalid slice argument.") from e
 
 	try:
 		Item().format_with_index(args.format)
 	except KeyError as e:
-		raise HandledError(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.")
+		raise HandledError(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.") from e
 
 	if not args.auth:
 		if not args.query:
 			raise HandledError("No query was provided. Please provide a query or a link to a Spotify album, artist, playlist or track.")
 
-		if (not args.client_id or not args.client_secret) and not TokenFile.read_token():
+		if not ((args.client_id and args.client_secret) or (TokenFile.read_token("ACCESS_TOKEN") and TokenFile.read_token("REFRESH_TOKEN"))):
 			raise HandledError(
 				"Not authenticated.\n"
 				"You can authenticate using the browser by running \"spotify-dlp --auth\".\n"
@@ -100,47 +63,55 @@ def parse_args() -> dict:
 
 	return args
 
+def write_all_tokens(spotify: SpotifyAPI):
+	TokenFile.write_token("ACCESS_TOKEN", spotify.access_token)
+	TokenFile.write_token("REFRESH_TOKEN", spotify.refresh_token)
+
 
 def main():
 	try:
+		args = init_args()
+		args = parse_args(args)
+
 		### FETCH TRACKLIST ###
 
-		ARGS = parse_args()
-
-		if ARGS.auth:
-			tag_print(f"Please open the following URL in your browser to authenticate:", color=Colors.BOLD)
+		if args.auth:
 			try:
-				token = SpotifyAPI.from_pkce_flow().token
+				spotify = SpotifyAPI.from_pkce_flow()
 			except Exception as e:
-				raise HandledError(f"An error occurred while trying to authenticate: {e}")
-			TokenFile.write_token(token)
+				raise HandledError(f"An error occurred while trying to authenticate: {e}") from e
+			write_all_tokens(spotify)
+
+			tag_print(f"Tokens saved to ~/.config/spotify-dlp/", color=Colors.BOLD)
 			return
 
-		if token := TokenFile.read_token():
-			spotify = SpotifyAPI(token=token)
-			tag_print("Authenticated using saved token.", color=Colors.BOLD)
+		if (access_token := TokenFile.read_token("ACCESS_TOKEN")) and (refresh_token := TokenFile.read_token("REFRESH_TOKEN")):
+			spotify = SpotifyAPI(access_token=access_token, refresh_token=refresh_token)
+			spotify.refresh_pkce_token()
+			write_all_tokens(spotify)
+			tag_print("Authenticated using refreshed saved token.", color=Colors.BOLD)
 		else:
 			try:
-				spotify = SpotifyAPI.from_client_credentials_flow(ARGS.client_id, ARGS.client_secret)
+				spotify = SpotifyAPI.from_client_credentials_flow(args.client_id, args.client_secret)
 			except Exception as e:
-				raise HandledError("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.")
+				raise HandledError("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.") from e
 
 		try:
-			SpotifyAPI.parse_url(ARGS.query)
-		except ValueError:
-			tag_print("Searching up the query...")
-			tracklist = spotify.items_by_search(ARGS.query, ARGS.type)
-		else:
-			tag_print("Fetching the query URL...")
 			try:
-				tracklist = spotify.items_by_url(ARGS.query)
-			except Exception as e:
-				raise HandledError(e)
+				SpotifyAPI.parse_url(args.query)
+			except ValueError:
+				tag_print("Searching up the query...")
+				tracklist = spotify.items_by_search(args.query, args.type)
+			else:
+				tag_print("Fetching the query URL...")
+				tracklist = spotify.items_by_url(args.query)
+		except Exception as e:
+			raise HandledError(e) from e
 
 		if len(tracklist) == 0:
 			raise HandledError("No tracks were found.")
 
-		tracklist = tracklist[ARGS.slice[0]:ARGS.slice[1]]
+		tracklist = tracklist[args.slice[0]:args.slice[1]]
 
 		if len(tracklist) == 0:
 			raise HandledError(f"The specified slice is out of range.")
@@ -148,19 +119,20 @@ def main():
 
 		### DISPLAY TRACKLIST ###
 
-		if ARGS.format == "help":
+		if args.format == "help":
 			tag_print("Available fields for the format argument:", color=Colors.BOLD)
 			for keys, value in tracklist[0].get_format_dict().items():
 				print("{:>10} {}".format(f"{{{keys}}}:", value))
 			return
 
+		print()
 		tag_print(f"The query you requested contained {len(tracklist)} track(s):", color=Colors.BOLD)
 		for track in tracklist:
-			print(track.format_with_index(ARGS.format))
+			print(track.format_with_index(args.format))
 
-		if not ARGS.yes:
+		if not args.yes:
 			print()
-			choice = tag_print("Are you sure you want to download these tracks? [y/n]\n", color=Colors.BOLD, prompt=True)
+			choice = tag_print("Are you sure you want to download these tracks? [y/N]\n", color=Colors.BOLD, prompt=True)
 
 			if "y" not in choice.lower():
 				return
@@ -170,28 +142,28 @@ def main():
 
 		### DOWNLOAD TRACKS ###
 
-		if not os.path.exists(ARGS.output):
-			os.makedirs(ARGS.output)
+		if not os.path.exists(args.output):
+			os.makedirs(args.output)
 
 		DEFAULT_YTDLP_OPTS = {
-			"quiet": not ARGS.verbose,
-			"no_warnings": not ARGS.verbose,
+			"quiet": not args.verbose,
+			"no_warnings": not args.verbose,
 			"format": "bestaudio",
 			"postprocessors": [
 				{
 					"key": "FFmpegExtractAudio",
-					"preferredcodec": ARGS.codec
+					"preferredcodec": args.codec
 				}
 			],
 			"noplaylist": True
 		}
 
 		for index, track in enumerate(tracklist, start=1):
-			filename = re.sub(r"[/<>:\"\\|?*]", "_", track.format(ARGS.format).strip())
-			filepath = os.path.join(ARGS.output, filename)
+			filename = re.sub(r"[/<>:\"\\|?*]", "_", track.format(args.format).strip())
+			filepath = os.path.join(args.output, filename)
 
-			if ARGS.metadata:
-				coverpath = os.path.join(ARGS.output, f"{track.album}.jpg")
+			if args.metadata:
+				coverpath = os.path.join(args.output, f"{track.album}.jpg")
 				if not os.path.exists(coverpath):
 					try:
 						img_data = requests.get(track.cover).content
@@ -199,10 +171,10 @@ def main():
 					except Exception as e:
 						tag_print(f"An error was encountered while trying to download the cover for \"{track.album}\": {e}", color=Colors.WARN)
 					else:
-						if ARGS.verbose:
+						if args.verbose:
 							tag_print(f"Successfully downloaded the cover for \"{track.album}\"!")
 
-			if os.path.exists(f"{filepath}.m4a") or os.path.exists(f"{filepath}.{ARGS.codec}"):
+			if os.path.exists(f"{filepath}.m4a") or os.path.exists(f"{filepath}.{args.codec}"):
 				tag_print(f"File \"{filename}\" already exists; Skipping track #{track.index}...", color=Colors.WARN)
 				continue
 
@@ -215,13 +187,16 @@ def main():
 			except Exception as e:
 				tag_print(f"Error: {e}; Skipping track #{track.index}...", color=Colors.WARN)
 			else:
-				tag_print(f"Successfully downloaded \"{track.format(ARGS.format)}\"! ({index}/{len(tracklist)})")
+				tag_print(f"Successfully downloaded \"{track.format(args.format)}\"! ({index}/{len(tracklist)})")
 
 	except KeyboardInterrupt:
 		tag_print("Interrupted by user.", color=Colors.FAIL)
 
 	except HandledError as e:
-		tag_print(f"Error: {e}", color=Colors.FAIL)
+		if args.verbose:
+			raise e
+		else:
+			tag_print(f"Error: {e}", color=Colors.FAIL)
 
 if __name__ == "__main__":
 	main()
