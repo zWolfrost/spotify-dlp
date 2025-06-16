@@ -203,9 +203,7 @@ def main():
 				if len(entries) == 0:
 					raise HandledError(f"No results found for track \"{track.format(args.format)}\".")
 
-				id = entries[0]["id"]
-
-				yt_dlp.YoutubeDL(options).download([id])
+				yt_dlp.YoutubeDL(options).download([entries[0]["id"]])
 			except Exception as e:
 				tag_print(f"Error: {e}; Skipping track #{track.index}...", color=Colors.WARN)
 			else:
