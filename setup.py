@@ -10,6 +10,7 @@ setup(
 	url="https://github.com/zWolfrost/spotify-dlp",
 	packages=find_packages(),
 	install_requires=[
+		"requests>=2.31.0",
 		"yt_dlp>=2024.4.9"
 	],
 	entry_points={

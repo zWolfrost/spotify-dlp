@@ -1,2 +1,2 @@
-requests==2.32.*
-yt-dlp==2025.6.9
+requests>=2.31.0
+yt-dlp>=2024.4.9
