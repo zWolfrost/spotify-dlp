@@ -1,5 +1,4 @@
-import os, argparse, re, requests
-from yt_dlp import YoutubeDL
+import os, argparse, re, urllib.parse, requests, yt_dlp
 from spotify_dlp.spotify_api import SpotifyAPI, Item
 from spotify_dlp.utils import HandledError, tag_print, Colors, TokenFile
 
@@ -19,7 +18,7 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-l", "--slice", type=str, default=":", help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
 
 	parser.add_argument("-o", "--output", type=str, default=".", help="The output path of the downloaded tracks.")
-	parser.add_argument("-c", "--codec", type=str, default="m4a", choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks.")
+	parser.add_argument("-c", "--codec", type=str, default="", choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks.")
 	parser.add_argument("-m", "--metadata", action="store_true", help="Whether to download metadata (such as covers).")
 
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
@@ -73,7 +72,8 @@ def main():
 		args = init_args()
 		args = parse_args(args)
 
-		### FETCH TRACKLIST ###
+
+		### AUTHENTICATION ###
 
 		if args.auth:
 			try:
@@ -86,15 +86,18 @@ def main():
 			return
 
 		if (access_token := TokenFile.read_token("ACCESS_TOKEN")) and (refresh_token := TokenFile.read_token("REFRESH_TOKEN")):
+			tag_print("Authenticating using refreshed saved token...", color=Colors.BOLD)
 			spotify = SpotifyAPI(access_token=access_token, refresh_token=refresh_token)
 			spotify.refresh_pkce_token()
 			write_all_tokens(spotify)
-			tag_print("Authenticated using refreshed saved token.", color=Colors.BOLD)
 		else:
 			try:
 				spotify = SpotifyAPI.from_client_credentials_flow(args.client_id, args.client_secret)
 			except Exception as e:
 				raise HandledError("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.") from e
+
+
+		### FETCH TRACKLIST ###
 
 		try:
 			try:
@@ -149,14 +152,15 @@ def main():
 			"quiet": not args.verbose,
 			"no_warnings": not args.verbose,
 			"format": "bestaudio",
+			"noplaylist": True,
+		} | ({
 			"postprocessors": [
 				{
 					"key": "FFmpegExtractAudio",
 					"preferredcodec": args.codec
 				}
-			],
-			"noplaylist": True
-		}
+			]
+		} if args.codec else {})
 
 		for index, track in enumerate(tracklist, start=1):
 			filename = re.sub(r"[/<>:\"\\|?*]", "_", track.format(args.format).strip())
@@ -174,16 +178,32 @@ def main():
 						if args.verbose:
 							tag_print(f"Successfully downloaded the cover for \"{track.album}\"!")
 
-			if os.path.exists(f"{filepath}.m4a") or os.path.exists(f"{filepath}.{args.codec}"):
+			if os.path.exists(f"{filepath}.{args.codec}"):
 				tag_print(f"File \"{filename}\" already exists; Skipping track #{track.index}...", color=Colors.WARN)
 				continue
 
 			options = DEFAULT_YTDLP_OPTS | {
-				"outtmpl": filepath + ".%(ext)s"
+				"outtmpl": filepath + ".%(ext)s",
+				"match_filter": yt_dlp.utils.match_filter_func(f"duration>{track.duration-5} & duration<{track.duration+5}")
 			}
 
 			try:
-				YoutubeDL(options).extract_info(f"ytsearch:{track.keywords}")
+				tag_print(f"Searching for track \"{track.format(args.format)}\"...\r", end="")
+
+				search_url = f"https://www.youtube.com/results?search_query={urllib.parse.unquote_plus(track.keywords)}&sp=CAMSAhAB"
+				search = yt_dlp.YoutubeDL(options | {"playlistend": 3}).extract_info(search_url, download=False)["entries"]
+
+				if len(search) == 0:
+					tag_print(f"Searching deeper for track \"{track.format(args.format)}\"...\r", end="")
+					search = yt_dlp.YoutubeDL(options).extract_info(f"ytsearch5:{track.keywords}", download=False)["entries"]
+					search = sorted(search, key=lambda s: s.get("view_count", 0), reverse=True)
+
+				if len(search) == 0:
+					raise HandledError(f"No results found for track \"{track.format(args.format)}\".")
+
+				id = search[0]["id"]
+
+				yt_dlp.YoutubeDL(options).download([id])
 			except Exception as e:
 				tag_print(f"Error: {e}; Skipping track #{track.index}...", color=Colors.WARN)
 			else:

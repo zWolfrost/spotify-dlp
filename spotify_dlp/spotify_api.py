@@ -17,6 +17,7 @@ class Item:
 	authors: list[str]
 	album: str
 	date: str
+	duration: int
 	cover: str
 	entry: int
 	index: int
@@ -31,18 +32,21 @@ class Item:
 				self.authors = [author["name"] for author in item["artists"]]
 				self.album = item["album"]["name"]
 				self.date = item["album"]["release_date"]
+				self.duration = item["duration_ms"] // 1000
 				self.cover = item["album"]["images"][0]["url"]
 				self.entry = item["track_number"]
 			case "episode":
 				self.authors = [item["show"]["publisher"]]
 				self.album = item["show"]["name"]
 				self.date = item["release_date"]
+				self.duration = item["duration_ms"] // 1000
 				self.cover = item["images"][0]["url"]
 				self.entry = None
 			case _:
 				self.authors = []
 				self.album = None
 				self.date = None
+				self.duration = None
 				self.cover = None
 				self.entry = None
 

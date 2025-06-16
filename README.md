@@ -29,7 +29,7 @@ Then, it downloads the result by using yt-dlp.
 ## Arguments
 | Command                | Example              | Description
 |:-:                     |:-:                   |:-
-|                        | "kon queso"          | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>If \"saved\", download the user's saved tracks.
+|                        | "earfquake"          | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>If \"saved\", download the user's saved tracks.
 | `-a` `--auth`          |                      | Authenticate using the Client ID and Client Secret.<br>After running this command, you will be prompted to log in to Spotify.
 | `-i` `--client-id`     | "qwertyuiop"         | The Spotify Client ID*.
 | `-s` `--client-secret` | "asdfghjkl"          | The Spotify Client Secret*.
@@ -37,7 +37,7 @@ Then, it downloads the result by using yt-dlp.
 | `-t` `--type`          | "track"              | When searching up a query,<br>the specified type of content.
 | `-l` `--slice`         | "2:6"                | The beginning and ending index of the list items<br>to download, separated by a colon ":" (1-based).<br>Either one of those indexes can be omitted.
 | `-o` `--output`        | "./album/"           | The output path of the downloaded tracks.
-| `-c` `--codec`         | "m4a"                | The audio codec of the downloaded tracks.
+| `-c` `--codec`         | "mp3"                | The audio codec of the downloaded tracks.<br>By default, it is the same as the yt-dlp default for `bestaudio`.
 | `-m` `--metadata`      |                      | Whether to download metadata (such as covers).
 | `-y` `--yes`           |                      | Whether to skip the confirmation prompt.
 | `-v` `--verbose`       |                      | Whether to display verbose information.
