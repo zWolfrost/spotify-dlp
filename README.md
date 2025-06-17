@@ -98,3 +98,5 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 <br>- Better error handling.
 	- **2.3.1**:
 	<br>- Fix windows path issues and terminal colors.
+	- **2.3.2**:
+	<br>- Faster searching.

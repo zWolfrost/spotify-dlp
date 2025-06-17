@@ -23,7 +23,7 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information and full errors.")
-	parser.add_argument("--version", action="version", version="%(prog)s 2.3.1")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.3.2")
 
 	return parser.parse_args()
 
