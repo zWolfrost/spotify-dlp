@@ -192,14 +192,14 @@ def main():
 				continue
 
 			TRACK_DURATION_DELTA = 5
-			SEARCH_ITEMS_COUNT = 10
+			SEARCH_TRACKS_COUNT = 10
 
 			ytdlp_options = DEFAULT_YTDLP_OPTIONS | {
 				"outtmpl": filepath + ".%(ext)s",
 				"match_filter": yt_dlp.utils.match_filter_func(
 					f"duration>={track.duration-TRACK_DURATION_DELTA} & duration<={track.duration+TRACK_DURATION_DELTA}"
 				),
-				"playlistend": SEARCH_ITEMS_COUNT
+				"playlistend": SEARCH_TRACKS_COUNT
 			}
 
 			def search_entries(url: str) -> str:
@@ -211,7 +211,7 @@ def main():
 				entries = search_entries(f"https://www.youtube.com/results?search_query={track.quoted_keywords}&sp=CAMSAhAB")
 
 				if len(entries) == 0:
-					entries = search_entries(f"ytsearch{SEARCH_ITEMS_COUNT}:{track.keywords}")
+					entries = search_entries(f"ytsearch{SEARCH_TRACKS_COUNT}:{track.keywords}")
 
 				if len(entries) == 0:
 					raise HandledError(f"No results found for track \"{track.format(args.format)}\".")
