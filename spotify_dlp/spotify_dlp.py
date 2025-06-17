@@ -161,6 +161,7 @@ def main():
 			"format": "bestaudio",
 			"noplaylist": True,
 			"extract_flat": True,
+			"extractor_args": { "youtube": { "player_client": ["tv", "web"] } },
 		} | ({
 			"postprocessors": [
 				{
@@ -214,8 +215,6 @@ def main():
 
 				if len(entries) == 0:
 					raise HandledError(f"No results found for track \"{track.format(args.format)}\".")
-
-				tag_print(f"Found results for track \"{track.format(args.format)}\"; Downloading...", color=Colors.BOLD)
 
 				yt_dlp.YoutubeDL(ytdlp_options).download([entries[0]["id"]])
 			except Exception as e:
