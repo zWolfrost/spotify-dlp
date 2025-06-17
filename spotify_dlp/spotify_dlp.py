@@ -155,11 +155,12 @@ def main():
 		if not os.path.exists(args.output):
 			os.makedirs(args.output)
 
-		DEFAULT_YTDLP_OPTS = {
+		DEFAULT_YTDLP_OPTIONS = {
 			"quiet": not args.verbose,
 			"no_warnings": not args.verbose,
 			"format": "bestaudio",
 			"noplaylist": True,
+			"extract_flat": True,
 		} | ({
 			"postprocessors": [
 				{
@@ -189,25 +190,26 @@ def main():
 				tag_print(f"File \"{filename}\" already exists; Skipping track #{track.index}...", color=Colors.WARN)
 				continue
 
-			options = DEFAULT_YTDLP_OPTS | {
+			TRACK_DURATION_DELTA = 5
+			SEARCH_ITEMS_COUNT = 10
+
+			ytdlp_options = DEFAULT_YTDLP_OPTIONS | {
 				"outtmpl": filepath + ".%(ext)s",
-				"match_filter": yt_dlp.utils.match_filter_func(f"duration>{track.duration-3} & duration<{track.duration+3}")
+				"match_filter": yt_dlp.utils.match_filter_func(
+					f"duration>={track.duration-TRACK_DURATION_DELTA} & duration<={track.duration+TRACK_DURATION_DELTA}"
+				),
+				"playlistend": SEARCH_ITEMS_COUNT
 			}
 
+			tag_print(f"Searching for track \"{track.format(args.format)}\"...\r", end="")
+
 			try:
-				tag_print(f"Searching for track \"{track.format(args.format)}\"...\r", end="")
-
-				search_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(track.keywords)}&sp=CAMSAhAB"
-				entries = yt_dlp.YoutubeDL(options | {"playlistend": 5, "extract_flat": True}).extract_info(search_url, download=False)["entries"]
-
-				if len(entries) == 0:
-					entries = yt_dlp.YoutubeDL(options | {"playlistend": 5, "extract_flat": True}).extract_info(f"ytsearch5:{track.keywords}", download=False)["entries"]
-					entries = sorted(entries, key=lambda s: s.get("view_count", 0), reverse=True)
+				entries = yt_dlp.YoutubeDL(ytdlp_options).extract_info(f"ytsearch{SEARCH_ITEMS_COUNT}:{track.keywords}", download=False)["entries"]
 
 				if len(entries) == 0:
 					raise HandledError(f"No results found for track \"{track.format(args.format)}\".")
 
-				yt_dlp.YoutubeDL(options).download([entries[0]["id"]])
+				yt_dlp.YoutubeDL(ytdlp_options).download([entries[0]["id"]])
 			except Exception as e:
 				tag_print(f"Error: {e}; Skipping track #{track.index}...", color=Colors.WARN)
 			else:
