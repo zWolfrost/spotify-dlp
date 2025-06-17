@@ -1,4 +1,4 @@
-import os, argparse, re, urllib.parse, requests, yt_dlp
+import os, argparse, requests, yt_dlp
 from spotify_dlp.spotify_api import SpotifyAPI, Item
 from spotify_dlp.utils import HandledError, tag_print, Colors, TokenFile
 
@@ -171,7 +171,7 @@ def main():
 		} if args.codec else {})
 
 		for index, track in enumerate(tracklist, start=1):
-			filename = re.sub(r"[/<>:\"\\|?*]", "_", track.format(args.format).strip())
+			filename = track.safe_format(args.format)
 			filepath = os.path.join(args.output, filename)
 
 			if args.metadata:
@@ -201,13 +201,21 @@ def main():
 				"playlistend": SEARCH_ITEMS_COUNT
 			}
 
+			def search_entries(url: str) -> str:
+				return yt_dlp.YoutubeDL(ytdlp_options).extract_info(url, download=False)["entries"]
+
 			tag_print(f"Searching for track \"{track.format(args.format)}\"...\r", end="")
 
 			try:
-				entries = yt_dlp.YoutubeDL(ytdlp_options).extract_info(f"ytsearch{SEARCH_ITEMS_COUNT}:{track.keywords}", download=False)["entries"]
+				entries = search_entries(f"https://www.youtube.com/results?search_query={track.quoted_keywords}&sp=CAMSAhAB")
+
+				if len(entries) == 0:
+					entries = search_entries(f"ytsearch{SEARCH_ITEMS_COUNT}:{track.keywords}")
 
 				if len(entries) == 0:
 					raise HandledError(f"No results found for track \"{track.format(args.format)}\".")
+
+				tag_print(f"Found results for track \"{track.format(args.format)}\"; Downloading...", color=Colors.BOLD)
 
 				yt_dlp.YoutubeDL(ytdlp_options).download([entries[0]["id"]])
 			except Exception as e:

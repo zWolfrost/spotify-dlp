@@ -1,10 +1,9 @@
-import requests, json, re
-from string import Formatter
+import requests, json, re, string
+from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, quote_plus
 from spotify_dlp.utils import HandledError, tag_print, Colors
 
 # PKCE Flow Imports
 import string, base64, random, hashlib, http.server
-from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 
 
 PKCE_APP_CLIENT_ID = "8e70634824f842519e666d1fefa91fd0"
@@ -65,18 +64,24 @@ class Item:
 	def keywords(self):
 		return f"{self.title} {' '.join(self.authors)} {self.album}"
 
+	@property
+	def quoted_keywords(self):
+		return quote_plus(self.keywords)
+
 
 	def get_format_dict(self) -> dict:
 		self_dict = self.__dict__.copy()
 		self_dict["authors"] = ", ".join(self_dict["authors"])
 		return self_dict
 
-
 	def format(self, format: str) -> str:
 		return format.format(**self.get_format_dict())
 
+	def safe_format(self, format: str) -> str:
+		return re.sub(r"[/<>:\"\\|?*]", "_", self.format(format).strip())
+
 	def format_with_index(self, format: str) -> str:
-		has_placeholder = lambda f, p: any(n == p for _, n, _, _ in Formatter().parse(f))
+		has_placeholder = lambda f, p: any(n == p for _, n, _, _ in string.Formatter().parse(f))
 		return self.format(("" if has_placeholder(format, "index") else "{index}. ") + format)
 
 
