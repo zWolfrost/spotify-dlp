@@ -48,18 +48,6 @@ def parse_args(args: argparse.Namespace) -> argparse.Namespace:
 	except KeyError as e:
 		raise HandledError(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.") from e
 
-	if not args.auth:
-		if not args.query:
-			raise HandledError("No query was provided. Please provide a query or a link to a Spotify album, artist, playlist or track.")
-
-		if not ((args.client_id and args.client_secret) or (TokenFile.read_token("ACCESS_TOKEN") and TokenFile.read_token("REFRESH_TOKEN"))):
-			raise HandledError(
-				"Not authenticated.\n"
-				"You can authenticate using the browser by running \"spotify-dlp --auth\".\n"
-				"Alternatively, you can provide your Client ID and Client Secret, "
-				"both trough command line arguments or environment variables (see README)."
-			)
-
 	return args
 
 def write_all_tokens(spotify: SpotifyAPI):
@@ -88,17 +76,26 @@ def main():
 
 			tag_print(f"Tokens saved to ~/.config/spotify-dlp/", color=Colors.BOLD)
 			return
+		elif not args.query:
+			raise HandledError("No query was provided. Please provide a query or a link to a Spotify album, artist, playlist or track.")
 
 		if args.client_id and args.client_secret:
 			try:
 				spotify = SpotifyAPI.from_client_credentials_flow(args.client_id, args.client_secret)
 			except Exception as e:
 				raise HandledError("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.") from e
-		else:
-			tag_print("Authenticating using refreshed saved token...", color=Colors.BOLD)
+		elif TokenFile.read_token("ACCESS_TOKEN") and TokenFile.read_token("REFRESH_TOKEN"):
+			tag_print("Authenticating using the saved token and refreshing...")
+
 			spotify = SpotifyAPI(access_token=TokenFile.read_token("ACCESS_TOKEN"), refresh_token=TokenFile.read_token("REFRESH_TOKEN"))
 			spotify.refresh_pkce_token()
 			write_all_tokens(spotify)
+		else:
+			raise HandledError(
+				"Not authenticated.\n"
+				"You can authenticate using the browser by running \"spotify-dlp --auth\".\n"
+				"Alternatively, you can provide your Client ID and Client Secret as command line arguments."
+			)
 
 
 		### FETCH TRACKLIST ###

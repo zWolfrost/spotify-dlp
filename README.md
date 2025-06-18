@@ -49,7 +49,7 @@ Then, it downloads the result by using `yt-dlp`.
 &nbsp;
 ## Use Examples
 ```sh
-spotify-dlp jigsaw falliing into place radiohead
+spotify-dlp jigsaw falling into place radiohead
 ```
 ```sh
 spotify-dlp spirit phone -t album -o "%userprofile%\Desktop" -c mp3 -y
@@ -99,4 +99,5 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 	- **2.3.1**:
 	<br>- Fix windows path issues and terminal colors.
 	- **2.3.2**:
+	<br>- Fixed port conflicts with `--auth` argument.
 	<br>- Faster searching.

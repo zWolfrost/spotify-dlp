@@ -97,7 +97,7 @@ class SpotifyAPI:
 
 	@classmethod
 	def from_client_credentials_flow(cls, client_id, client_secret):
-		token = cls.request_post(cls, "https://accounts.spotify.com/api/token", {
+		token = SpotifyAPI.token_post_request({
 			"grant_type": "client_credentials",
 			"client_id": client_id,
 			"client_secret": client_secret,
@@ -163,7 +163,7 @@ class SpotifyAPI:
 		if not AUTH_CODE:
 			raise HandledError("No authentication code received. Please try again.")
 
-		content = cls.request_post(cls, "https://accounts.spotify.com/api/token", {
+		content = SpotifyAPI.token_post_request({
 			"client_id": client_id,
 			"grant_type": "authorization_code",
 			"code": AUTH_CODE,
@@ -178,7 +178,7 @@ class SpotifyAPI:
 
 	def refresh_pkce_token(self):
 		try:
-			res = self.request_post("https://accounts.spotify.com/api/token", {
+			res = SpotifyAPI.token_post_request({
 				"grant_type": "refresh_token",
 				"refresh_token": self.refresh_token,
 				"client_id": self.client_id
@@ -212,21 +212,22 @@ class SpotifyAPI:
 		if response.status_code != 200:
 			raise HandledError(f"Request to {response.url} failed with code {response.status_code}: {response.reason}")
 
-	def request_get(self, endpoint: str) -> dict:
-		response = requests.get(
-			"https://api.spotify.com/v1" + endpoint,
-			headers={"Authorization": "Bearer " + self.access_token}
+	@staticmethod
+	def token_post_request(data: dict = None) -> dict:
+		response = requests.post(
+			"https://accounts.spotify.com/api/token",
+			headers={"Content-Type": "application/x-www-form-urlencoded"},
+			data=urlencode(data)
 		)
 
-		self.raise_request_if_error(response)
+		SpotifyAPI.raise_request_if_error(response)
 
 		return response.json()
 
-	def request_post(self, endpoint: str, data: dict = None) -> dict:
-		response = requests.post(
-			endpoint,
-			headers={"Content-Type": "application/x-www-form-urlencoded"},
-			data=urlencode(data)
+	def api_get_request(self, endpoint: str) -> dict:
+		response = requests.get(
+			"https://api.spotify.com/v1" + endpoint,
+			headers={"Authorization": "Bearer " + self.access_token}
 		)
 
 		self.raise_request_if_error(response)
@@ -240,22 +241,22 @@ class SpotifyAPI:
 
 		match item_type:
 			case "album":
-				album = self.request_get(f"/albums/{item_id}")
+				album = self.api_get_request(f"/albums/{item_id}")
 				while len(info) < album["total_tracks"]:
-					result = self.request_get(f"/albums/{item_id}/tracks?limit=50&offset={len(info)}")
+					result = self.api_get_request(f"/albums/{item_id}/tracks?limit=50&offset={len(info)}")
 					for item in result["items"]:
 						item["album"] = album
 						info.append(Item(item))
 
 			case "artist":
-				result = self.request_get(f"/artists/{item_id}/top-tracks?market=US")
+				result = self.api_get_request(f"/artists/{item_id}/top-tracks?market=US")
 				for item in result["tracks"]:
 					info.append(Item(item))
 
 			case "playlist" | "saved":
 				total = None
 				while total is None or len(info) < total:
-					result = self.request_get(
+					result = self.api_get_request(
 						f"/playlists/{item_id}/tracks?limit=100&offset={len(info)}" if item_type == "playlist" else
 						f"/me/tracks?limit=50&offset={len(info)}" if item_type in ("liked", "saved") else ""
 					)
@@ -271,7 +272,7 @@ class SpotifyAPI:
 				print()
 
 			case "track":
-				result = self.request_get(f"/tracks/{item_id}")
+				result = self.api_get_request(f"/tracks/{item_id}")
 				info.append(Item(result))
 
 			case _:
@@ -284,7 +285,7 @@ class SpotifyAPI:
 
 
 	def items_by_search(self, query: str, search_type="track") -> list[Item]:
-		result = self.request_get(f"/search?q={query}&type={search_type}&limit=1")
+		result = self.api_get_request(f"/search?q={query}&type={search_type}&limit=1")
 		result = list(result.values())[0]["items"]
 
 		if len(result) == 0:
