@@ -1,9 +1,9 @@
-import requests, json, re, string
+import requests, re, string
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, quote_plus
 from spotify_dlp.utils import HandledError, tag_print, Colors
 
 # PKCE Flow Imports
-import string, base64, random, hashlib, http.server
+import base64, random, hashlib, http.server
 
 
 PKCE_APP_CLIENT_ID = "8e70634824f842519e666d1fefa91fd0"
@@ -139,7 +139,9 @@ class SpotifyAPI:
 			def log_message(self, format, *args):
 				return
 
-		PORT = 3000
+		httpd = http.server.HTTPServer(("127.0.0.1", 0), HttpSpotifyAuthHandler)
+		PORT = httpd.server_address[1]
+
 		REDIRECT_URI = f"http://127.0.0.1:{PORT}/"
 
 		CODE_VERIFIER = random_string(64)
@@ -155,7 +157,6 @@ class SpotifyAPI:
 		tag_print(f"Please open the following URL in your browser to authenticate:", color=Colors.BOLD)
 		print(AUTH_URL)
 
-		httpd = http.server.HTTPServer(("127.0.0.1", PORT), HttpSpotifyAuthHandler)
 		httpd.handle_request()
 		AUTH_CODE = httpd.auth_code
 
@@ -176,18 +177,28 @@ class SpotifyAPI:
 		return cls(client_id, content.get("access_token"), content.get("refresh_token"))
 
 	def refresh_pkce_token(self):
-		res = self.request_post("https://accounts.spotify.com/api/token", {
-			"grant_type": "refresh_token",
-			"refresh_token": self.refresh_token,
-			"client_id": self.client_id
-		})
+		try:
+			res = self.request_post("https://accounts.spotify.com/api/token", {
+				"grant_type": "refresh_token",
+				"refresh_token": self.refresh_token,
+				"client_id": self.client_id
+			})
+		except Exception as e:
+			if str(e) == "invalid_grant":
+				raise HandledError("The refresh token is invalid or has expired. Please re-authenticate.") from e
+			raise
 
 		self.access_token = res.get("access_token")
 		self.refresh_token = res.get("refresh_token")
 
 
 	@staticmethod
-	def request_raise_if_error(content):
+	def raise_request_if_error(response):
+		try:
+			content = response.json()
+		except Exception:
+			raise HandledError(f"Request to {response.url} returned invalid JSON with code {response.status_code}: {response.reason}")
+
 		if "error" in content:
 			if isinstance(content["error"], str):
 				msg = content["error"]
@@ -198,26 +209,29 @@ class SpotifyAPI:
 
 			raise HandledError(msg)
 
+		if response.status_code != 200:
+			raise HandledError(f"Request to {response.url} failed with code {response.status_code}: {response.reason}")
+
 	def request_get(self, endpoint: str) -> dict:
-		headers = {"Authorization": "Bearer " + self.access_token}
-		result = requests.get("https://api.spotify.com/v1" + endpoint, headers=headers)
+		response = requests.get(
+			"https://api.spotify.com/v1" + endpoint,
+			headers={"Authorization": "Bearer " + self.access_token}
+		)
 
-		content = json.loads(result.content)
-		self.request_raise_if_error(content)
+		self.raise_request_if_error(response)
 
-		return content
+		return response.json()
 
 	def request_post(self, endpoint: str, data: dict = None) -> dict:
-		res = requests.post(
+		response = requests.post(
 			endpoint,
 			headers={"Content-Type": "application/x-www-form-urlencoded"},
 			data=urlencode(data)
 		)
 
-		content = json.loads(res.content)
-		self.request_raise_if_error(content)
+		self.raise_request_if_error(response)
 
-		return content
+		return response.json()
 
 
 	def items_by_url(self, url: str) -> list[Item]:
