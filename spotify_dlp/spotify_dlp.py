@@ -6,7 +6,7 @@ from spotify_dlp.utils import HandledError, tag_print, Colors, TokenFile
 def init_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(prog="spotify-dlp", description="Command line downloader for spotify tracks, playlists, albums and top artists tracks.")
 
-	parser.add_argument("query", type=str, nargs=argparse.ZERO_OR_MORE, help="The words to search up or a link to a spotify album, artist, playlist or track. If \"saved\", download the user's saved tracks (requires browser authentication).")
+	parser.add_argument("query", type=str, nargs=argparse.ZERO_OR_MORE, help="The words to search up or a link to a spotify album, artist, playlist or track.")
 
 	parser.add_argument("-a", "--auth", action="store_true", help="Authenticate using the client credentials flow and save the Client ID and Client Secret to a file.")
 	parser.add_argument("-i", "--client-id", default=TokenFile.read_token("CLIENT_ID"), type=str, help="The Spotify Client ID.")

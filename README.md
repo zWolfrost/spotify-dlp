@@ -25,7 +25,7 @@ Then, it downloads the result by using `yt-dlp`.
 ## Arguments
 | Command                | Example              | Description
 |:-:                     |:-:                   |:-
-|                        | "earfquake"          | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>If \"saved\", download the user's saved tracks.
+|                        | "earfquake"          | The words to search up<br>or a link to a spotify album, artist, playlist or track.
 | `-a` `--auth`          |                      | Authenticate using the client credentials flow and exit.
 | `-i` `--client-id`     | "qwertyuiop"         | The Spotify Client ID*.
 | `-s` `--client-secret` | "asdfghjkl"          | The Spotify Client Secret*.

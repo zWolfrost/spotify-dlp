@@ -253,13 +253,10 @@ class SpotifyAPI:
 				for item in result["tracks"]:
 					info.append(Item(item))
 
-			case "playlist" | "saved":
+			case "playlist":
 				total = None
 				while total is None or len(info) < total:
-					result = self.api_get_request(
-						f"/playlists/{item_id}/tracks?limit=100&offset={len(info)}" if item_type == "playlist" else
-						f"/me/tracks?limit=50&offset={len(info)}" if item_type in ("liked", "saved") else ""
-					)
+					result = self.api_get_request(f"/playlists/{item_id}/tracks?limit=100&offset={len(info)}")
 					if total is None:
 						total = result["total"]
 					for item in result["items"]:
@@ -297,8 +294,6 @@ class SpotifyAPI:
 	@staticmethod
 	def parse_url(url: str) -> tuple[str, str]:
 		try:
-			if url in ("saved", ):
-				return url, None
 			return re.search(r"(?:open\.spotify\.com/|spotify:)([a-z]+)(?:/|:)(\w+)", url).groups()
 		except AttributeError as e:
 			raise ValueError("Invalid URL.") from e
