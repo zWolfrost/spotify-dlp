@@ -1,12 +1,6 @@
 import requests, re, string
-from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode, quote_plus
-from spotify_dlp.utils import HandledError, tag_print, Colors
-
-# PKCE Flow Imports
-import base64, random, hashlib, http.server
-
-
-PKCE_APP_CLIENT_ID = "8e70634824f842519e666d1fefa91fd0"
+from urllib.parse import urlencode, quote_plus
+from spotify_dlp.utils import HandledError, tag_print
 
 
 class Item:
@@ -90,7 +84,7 @@ class SpotifyAPI:
 	access_token: str
 	refresh_token: str
 
-	def __init__(self, client_id: str = PKCE_APP_CLIENT_ID, access_token: str = None, refresh_token: str = None):
+	def __init__(self, client_id: str = None, access_token: str = None, refresh_token: str = None):
 		self.client_id = client_id
 		self.access_token = access_token
 		self.refresh_token = refresh_token
@@ -104,93 +98,6 @@ class SpotifyAPI:
 		}).get("access_token")
 
 		return cls(client_id, token)
-
-	@classmethod
-	def from_pkce_flow(cls, client_id: str = PKCE_APP_CLIENT_ID):
-		def random_string(length: int = 16) -> str:
-			CHARS = string.ascii_uppercase + string.ascii_lowercase + string.digits
-			return ''.join(random.choice(CHARS) for _ in range(length))
-
-		def generate_code_challenge(code_verifier: str) -> str:
-			digest = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-			return base64.urlsafe_b64encode(digest).decode('utf-8').rstrip('=')
-
-		def add_url_params(url, params):
-			url_parts = list(urlparse(url))
-			query = dict(parse_qsl(url_parts[4]))
-			query.update(params)
-			url_parts[4] = urlencode(query)
-			return urlunparse(url_parts)
-
-		class HttpSpotifyAuthHandler(http.server.BaseHTTPRequestHandler):
-			auth_code: str = None
-
-			def do_GET(self):
-				self.send_response(200)
-				self.send_header("Content-type", "text/plain")
-				self.end_headers()
-				self.server.auth_code = dict(parse_qsl(urlparse(self.path).query)).get("code")
-
-				if self.server.auth_code:
-					self.wfile.write(b"Authentication successful! You can close this window now.")
-				else:
-					self.wfile.write(b"No authentication code received. Please try again.")
-
-			def log_message(self, format, *args):
-				return
-
-		httpd = http.server.HTTPServer(("127.0.0.1", 0), HttpSpotifyAuthHandler)
-		PORT = httpd.server_address[1]
-
-		REDIRECT_URI = f"http://127.0.0.1:{PORT}/"
-
-		CODE_VERIFIER = random_string(64)
-		AUTH_URL = add_url_params("https://accounts.spotify.com/authorize", {
-			"client_id": client_id,
-			"response_type": "code",
-			"redirect_uri": REDIRECT_URI,
-			"scope": "user-library-read",
-			"code_challenge_method": "S256",
-			"code_challenge": generate_code_challenge(CODE_VERIFIER),
-		})
-
-		tag_print(f"Please open the following URL in your browser to authenticate:", color=Colors.BOLD)
-		print(AUTH_URL)
-
-		httpd.handle_request()
-		AUTH_CODE = httpd.auth_code
-
-		if not AUTH_CODE:
-			raise HandledError("No authentication code received. Please try again.")
-
-		content = SpotifyAPI.token_post_request({
-			"client_id": client_id,
-			"grant_type": "authorization_code",
-			"code": AUTH_CODE,
-			"redirect_uri": REDIRECT_URI,
-			"code_verifier": CODE_VERIFIER,
-		})
-
-		if not content.get("access_token"):
-			raise HandledError("No access token received. Please try again.")
-
-		return cls(client_id, content.get("access_token"), content.get("refresh_token"))
-
-	def refresh_pkce_token(self):
-		try:
-			res = SpotifyAPI.token_post_request({
-				"grant_type": "refresh_token",
-				"refresh_token": self.refresh_token,
-				"client_id": self.client_id
-			})
-		except Exception as e:
-			if str(e) == "invalid_grant":
-				raise HandledError("The refresh token is invalid or has expired. Please re-authenticate.") from e
-			raise
-
-		self.access_token = res.get("access_token")
-		self.refresh_token = res.get("refresh_token")
-
 
 	@staticmethod
 	def raise_request_if_error(response: requests.Response):

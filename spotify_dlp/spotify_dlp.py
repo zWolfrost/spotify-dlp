@@ -1,23 +1,24 @@
 import os, argparse, requests, yt_dlp
 from spotify_dlp.spotify_api import SpotifyAPI, Item
-from spotify_dlp.utils import HandledError, tag_print, Colors, TokenFile
+from spotify_dlp.utils import HandledError, tag_print, Colors, Config
 
 
 def init_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(prog="spotify-dlp", description="Command line downloader for spotify tracks, playlists, albums and top artists tracks.")
+	parser.set_defaults(**Config.read())
 
 	parser.add_argument("query", type=str, nargs=argparse.ZERO_OR_MORE, help="The words to search up or a link to a spotify album, artist, playlist or track.")
 
 	parser.add_argument("-a", "--auth", action="store_true", help="Authenticate using the client credentials flow and save the Client ID and Client Secret to a file.")
-	parser.add_argument("-i", "--client-id", default=TokenFile.read_token("CLIENT_ID"), type=str, help="The Spotify Client ID.")
-	parser.add_argument("-s", "--client-secret", default=TokenFile.read_token("CLIENT_SECRET"), type=str, help="The Spotify Client Secret.")
+	parser.add_argument("-i", "--client-id", type=str, help="The Spotify Client ID.")
+	parser.add_argument("-s", "--client-secret", type=str, help="The Spotify Client Secret.")
 
-	parser.add_argument("-f", "--format", type=str, default="{title} - {authors} ({album})", help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
-	parser.add_argument("-t", "--type", type=str, default="track", choices=["album", "artist", "playlist", "track"], help="When searching up a query, the specified type of content.")
-	parser.add_argument("-l", "--slice", type=str, default=":", help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
+	parser.add_argument("-f", "--format", type=str, help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
+	parser.add_argument("-t", "--type", type=str, choices=["album", "artist", "playlist", "track"], help="When searching up a query, the specified type of content.")
+	parser.add_argument("-l", "--slice", type=str, help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
 
-	parser.add_argument("-o", "--output", type=str, default=".", help="The output path of the downloaded tracks.")
-	parser.add_argument("-c", "--codec", type=str, default="", choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks. By default, it is unchanged from the one \"yt-dlp\" downloads. Requires \"ffmpeg\" to be installed.")
+	parser.add_argument("-o", "--output", type=str, help="The output path of the downloaded tracks.")
+	parser.add_argument("-c", "--codec", type=str, choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks. By default, it is unchanged from the one \"yt-dlp\" downloads. Requires \"ffmpeg\" to be installed.")
 	parser.add_argument("-m", "--metadata", action="store_true", help="Whether to download metadata (such as covers).")
 
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
@@ -79,9 +80,9 @@ def main():
 			if len(client_secret) != 32 or not client_secret.isalnum():
 				raise HandledError("Invalid Client Secret. Please try again.")
 
-			TokenFile.write_token("CLIENT_ID", client_id)
-			TokenFile.write_token("CLIENT_SECRET", client_secret)
-			tag_print(f"Tokens saved to ~/.config/spotify-dlp/", color=Colors.BOLD)
+			Config.write("client_id", client_id)
+			Config.write("client_secret", client_secret)
+			tag_print(f"Tokens saved to ~/.config/spotify-dlp/config.json", color=Colors.BOLD)
 
 			return
 		elif not args.query:

@@ -1,4 +1,4 @@
-import os
+import os, json
 
 class HandledError(Exception):
    pass
@@ -18,28 +18,49 @@ class Colors():
 	WARN = "\033[93m"
 	BOLD = "\033[1m"
 
-class TokenFile():
+class Config():
+	DEFAULT_CONFIG = {
+		"client_id": None,
+		"client_secret": None,
+		"format": "{title} - {authors} ({album})",
+		"type": "track",
+		"slice": ":",
+		"output": ".",
+		"codec": None,
+		"metadata": False,
+		"yes": False,
+		"verbose": False,
+	}
+
 	@staticmethod
-	def get_token_filepath() -> str:
+	def get_config_filepath() -> str:
 		if os.name == "nt":
-			return os.path.join(os.getenv("APPDATA"), "spotify-dlp")
+			return os.path.join(os.getenv("APPDATA"), "spotify-dlp", "config.json")
 		else:
-			return os.path.expanduser("~/.config/spotify-dlp/")
+			return os.path.expanduser("~/.config/spotify-dlp/config.json")
 
 	@staticmethod
-	def read_token(name: str) -> str:
-		filepath = os.path.join(TokenFile.get_token_filepath(), name)
+	def read(name: str = None):
+		if not os.path.exists(os.path.dirname(Config.get_config_filepath())) or \
+				not os.path.isfile(Config.get_config_filepath()):
+			return Config.DEFAULT_CONFIG.get(name)
 
-		if not os.path.exists(filepath):
-			return None
+		with open(Config.get_config_filepath(), "r") as f:
+			settings: dict = Config.DEFAULT_CONFIG | json.load(f)
 
-		with open(filepath, "r") as f:
-			return f.read().strip()
+		return settings.get(name) if name else settings
 
 	@staticmethod
-	def write_token(name: str, token: str):
-		if not os.path.exists(TokenFile.get_token_filepath()):
-			os.mkdir(TokenFile.get_token_filepath())
+	def write(name: str, value: str):
+		os.makedirs(os.path.dirname(Config.get_config_filepath()), exist_ok=True)
 
-		with open(os.path.join(TokenFile.get_token_filepath(), name), "w+") as f:
-			f.write(token)
+		settings = {}
+
+		if os.path.isfile(Config.get_config_filepath()):
+			with open(Config.get_config_filepath(), "r") as f:
+				settings = json.load(f)
+
+		settings[name] = value
+
+		with open(Config.get_config_filepath(), "w") as f:
+			json.dump(settings, f, indent=4)
