@@ -15,7 +15,7 @@ Then, it downloads the result by using `yt-dlp`.
 	pip install spotify-dlp
 	```
 
-2. Then, you can authenticate your Spotify account by running the following command and following the instructions:
+2. Then, you can authenticate your Spotify account by running this command and following the instructions:
 	```bash
 	spotify-dlp --auth
 	```
