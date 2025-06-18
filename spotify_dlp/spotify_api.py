@@ -193,11 +193,11 @@ class SpotifyAPI:
 
 
 	@staticmethod
-	def raise_request_if_error(response):
+	def raise_request_if_error(response: requests.Response):
 		try:
 			content = response.json()
 		except Exception:
-			raise HandledError(f"Request to {response.url} returned invalid JSON with code {response.status_code}: {response.reason}")
+			raise HandledError(f"Request to {response.url} returned invalid/missing JSON with code {response.status_code}: {response.reason}")
 
 		if "error" in content:
 			if isinstance(content["error"], str):

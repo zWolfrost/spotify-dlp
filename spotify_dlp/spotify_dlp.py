@@ -84,10 +84,10 @@ def main():
 				spotify = SpotifyAPI.from_client_credentials_flow(args.client_id, args.client_secret)
 			except Exception as e:
 				raise HandledError("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.") from e
-		elif TokenFile.read_token("ACCESS_TOKEN") and TokenFile.read_token("REFRESH_TOKEN"):
+		elif (access_token := TokenFile.read_token("ACCESS_TOKEN")) and (refresh_token := TokenFile.read_token("REFRESH_TOKEN")):
 			tag_print("Authenticating using the saved token and refreshing...")
 
-			spotify = SpotifyAPI(access_token=TokenFile.read_token("ACCESS_TOKEN"), refresh_token=TokenFile.read_token("REFRESH_TOKEN"))
+			spotify = SpotifyAPI(access_token=access_token, refresh_token=refresh_token)
 			spotify.refresh_pkce_token()
 			write_all_tokens(spotify)
 		else:
