@@ -8,9 +8,9 @@ def init_args() -> argparse.Namespace:
 
 	parser.add_argument("query", type=str, nargs=argparse.ZERO_OR_MORE, help="The words to search up or a link to a spotify album, artist, playlist or track. If \"saved\", download the user's saved tracks (requires browser authentication).")
 
-	parser.add_argument("-a", "--auth", action="store_true", help="Authenticate using the PKCE flow and exit.")
-	parser.add_argument("-i", "--client-id", type=str, help="The Spotify Client ID.")
-	parser.add_argument("-s", "--client-secret", type=str, help="The Spotify Client Secret.")
+	parser.add_argument("-a", "--auth", action="store_true", help="Authenticate using the client credentials flow and save the Client ID and Client Secret to a file.")
+	parser.add_argument("-i", "--client-id", default=TokenFile.read_token("CLIENT_ID"), type=str, help="The Spotify Client ID.")
+	parser.add_argument("-s", "--client-secret", default=TokenFile.read_token("CLIENT_SECRET"), type=str, help="The Spotify Client Secret.")
 
 	parser.add_argument("-f", "--format", type=str, default="{title} - {authors} ({album})", help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
 	parser.add_argument("-t", "--type", type=str, default="track", choices=["album", "artist", "playlist", "track"], help="When searching up a query, the specified type of content.")
@@ -23,7 +23,7 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information and full errors.")
-	parser.add_argument("--version", action="version", version="%(prog)s 2.3.2")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.4.0")
 
 	return parser.parse_args()
 
@@ -50,10 +50,6 @@ def parse_args(args: argparse.Namespace) -> argparse.Namespace:
 
 	return args
 
-def write_all_tokens(spotify: SpotifyAPI):
-	TokenFile.write_token("ACCESS_TOKEN", spotify.access_token)
-	TokenFile.write_token("REFRESH_TOKEN", spotify.refresh_token)
-
 
 def main():
 	try:
@@ -66,15 +62,27 @@ def main():
 
 
 		### AUTHENTICATION ###
-
 		if args.auth:
-			try:
-				spotify = SpotifyAPI.from_pkce_flow()
-			except Exception as e:
-				raise HandledError(f"An error occurred while trying to authenticate: {e}") from e
-			write_all_tokens(spotify)
+			print(
+				"To authenticate, please follow these steps:\n"
+				"1. Go to https://developer.spotify.com/dashboard/applications\n"
+				"2. Press \"Create app\" and fill in details for name and description.\n"
+				"3. Set \"Redirect URIs\" to a random URL, such as \"http://127.0.0.1:3000/\".\n"
+				"4. Press \"Save\" and paste your Client ID and Client Secret below.\n"
+			)
+			client_id = input("Client ID: ").strip()
+			client_secret = input("Client Secret: ").strip()
 
+			if len(client_id) != 32 or not client_id.isalnum():
+				raise HandledError("Invalid Client ID. Please try again.")
+
+			if len(client_secret) != 32 or not client_secret.isalnum():
+				raise HandledError("Invalid Client Secret. Please try again.")
+
+			TokenFile.write_token("CLIENT_ID", client_id)
+			TokenFile.write_token("CLIENT_SECRET", client_secret)
 			tag_print(f"Tokens saved to ~/.config/spotify-dlp/", color=Colors.BOLD)
+
 			return
 		elif not args.query:
 			raise HandledError("No query was provided. Please provide a query or a link to a Spotify album, artist, playlist or track.")
@@ -84,16 +92,10 @@ def main():
 				spotify = SpotifyAPI.from_client_credentials_flow(args.client_id, args.client_secret)
 			except Exception as e:
 				raise HandledError("Couldn't fetch token. Client ID and/or Client Secret are probably invalid.") from e
-		elif (access_token := TokenFile.read_token("ACCESS_TOKEN")) and (refresh_token := TokenFile.read_token("REFRESH_TOKEN")):
-			tag_print("Authenticating using the saved token and refreshing...")
-
-			spotify = SpotifyAPI(access_token=access_token, refresh_token=refresh_token)
-			spotify.refresh_pkce_token()
-			write_all_tokens(spotify)
 		else:
 			raise HandledError(
 				"Not authenticated.\n"
-				"You can authenticate using the browser by running \"spotify-dlp --auth\".\n"
+				"You can authenticate by running `spotify-dlp --auth` and following the instructions.\n"
 				"Alternatively, you can provide your Client ID and Client Secret as command line arguments."
 			)
 

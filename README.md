@@ -15,22 +15,18 @@ Then, it downloads the result by using `yt-dlp`.
 	pip install spotify-dlp
 	```
 
-2. Then, you can authenticate your Spotify account by running the following command:
+2. Then, you can authenticate your Spotify account by running the following command and following the instructions:
 	```bash
 	spotify-dlp --auth
 	```
-	This command will cause the program to print out an URL. Open it in a browser, log in to your Spotify account and allow the app to access your data. The authentication token should be saved automatically and should get used for future commands.
-
-&nbsp;
-
-*If you do not want to authenticate using the browser, you can manually pass your Client ID and Client Secret as arguments every command. You can get these values by logging to [Spotify developer console](https://developer.spotify.com/dashboard) and clicking on "Create an App", and you can pass them using the `-i` and `-s` arguments, respectively.*
+	The authentication tokens should get saved automatically and used for future commands.
 
 &nbsp;
 ## Arguments
 | Command                | Example              | Description
 |:-:                     |:-:                   |:-
 |                        | "earfquake"          | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>If \"saved\", download the user's saved tracks.
-| `-a` `--auth`          |                      | Authenticate using the PKCE flow and exit.
+| `-a` `--auth`          |                      | Authenticate using the client credentials flow and exit.
 | `-i` `--client-id`     | "qwertyuiop"         | The Spotify Client ID*.
 | `-s` `--client-secret` | "asdfghjkl"          | The Spotify Client Secret*.
 | `-f` `--format`        | "{name} - {authors}" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
@@ -101,3 +97,5 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 	- **2.3.2**:
 	<br>- Fixed port conflicts with `--auth` argument.
 	<br>- Faster searching.
+- **2.4.0**:
+<br>- Removed authentication via PKCE flow, as [spotify only supports up to 25 users for apps not made by companies.](https://docs.google.com/forms/d/1O87xdPP1zWUDyHnduwbEFpcjA57JOaefCgBShKjAqlo/viewform?edit_requested=true)
