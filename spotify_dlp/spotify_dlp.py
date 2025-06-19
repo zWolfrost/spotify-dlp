@@ -147,7 +147,6 @@ def main():
 			return
 
 		CUTOFF_LENGTH = 100
-
 		tag_print(f"The query you requested contained {len(tracklist)} track(s):", color=Colors.BOLD)
 		for track in tracklist[:CUTOFF_LENGTH]:
 			print(track.format_with_index(args.format))
