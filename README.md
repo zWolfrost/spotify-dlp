@@ -27,8 +27,8 @@ Then, it downloads the result by using `yt-dlp`.
 |:-:                     |:-:                 |:-
 |                        | "kid a album"      | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>Include keywords like `album` or `playlist`<br>to specify the type of item to search for.
 | `-a` `--auth`          |                    | Authenticate using the client credentials flow and exit.
-| `-i` `--client-id`     | "qwertyuiop"       | The Spotify Client ID*.
-| `-s` `--client-secret` | "asdfghjkl"        | The Spotify Client Secret*.
+| `-i` `--client-id`     | "qwertyuiop"       | The Spotify Client ID.
+| `-s` `--client-secret` | "asdfghjkl"        | The Spotify Client Secret.
 | `-f` `--format`        | "{index}. {title}" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
 | `-l` `--slice`         | "2:6,10"           | The beginning and ending index of the list items<br>to download, separated by a colon "`:`" (1-based). <br>Multiple slices can be specified with a comma "`,`".
 | `-o` `--output`        | "./album/"         | The output path of the downloaded tracks.
@@ -38,26 +38,21 @@ Then, it downloads the result by using `yt-dlp`.
 | `-v` `--verbose`       |                    | Whether to display verbose information and full errors.
 | `-h` `--help`          |                    | Show the help message and exit.
 
-*Required if not authenticated via the `spotify-dlp --auth` command.
-
-
 &nbsp;
-## Use Examples
+## Usage Examples
 ```sh
-spotify-dlp jigsaw falling into place radiohead
+spotify-dlp jigsaw falling into place
 ```
 ```sh
-spotify-dlp spirit phone -t album -o "%userprofile%\Desktop" -c mp3 -y
+spotify-dlp spirit phone album -o "./Desktop/spotify" -c mp3 -y
 ```
 ```sh
 spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_client_id" -s "your_client_secret"
 ```
 
-
 &nbsp;
 ## Screenshots
 ![Downloading album](https://i.imgur.com/DorBju2.png)
-
 
 &nbsp;
 ## Changelog
@@ -101,4 +96,4 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 - **2.5.0**:
 <br>- Added config file support.
 <br>- Added comma (",") support for `--slice` argument.
-<br>- The item type can be now specified in the search query; Removed `--type` argument.
+<br>- The item type can be now specified in the search query; removed `--type` argument.

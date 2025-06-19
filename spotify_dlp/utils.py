@@ -3,14 +3,14 @@ import os, json
 class HandledError(Exception):
    pass
 
-def tag_print(string: str, color: str = None, prompt: bool = False, end: str = "\n"):
+def tag_print(string: str, color: str = None, prompt: bool = False, start: str = "", end: str = "\n"):
 	TAG = "[spotify-dlp]"
-	string = TAG + " " + string
+	string = start + TAG + " " + string
 
 	if color:
 		string = color + string + Colors.ENDC
 
-	return input(string) if prompt else print(string, end=end)
+	return input(string) if prompt else print(string, end=end, flush=True)
 
 class Colors():
 	ENDC = "\033[0m"

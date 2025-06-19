@@ -163,7 +163,7 @@ class SpotifyAPI:
 			case "playlist":
 				total = None
 				while total is None or len(info) < total:
-					result = self.api_get_request(f"/playlists/{item_id}/tracks?limit=100&offset={len(info)}")
+					result = self.api_get_request(f"/playlists/{item_id}/tracks?limit=50&offset={len(info)}")
 					if total is None:
 						total = result["total"]
 					for item in result["items"]:
@@ -171,8 +171,7 @@ class SpotifyAPI:
 							info.append(Item(item["track"]))
 						else:
 							total -= 1
-					print("\r", end="")
-					tag_print(f"Fetching items... {len(info)}/{total}", end="")
+					tag_print(f"Fetching items ({len(info)}/{total})...", start="\r", end="")
 				print()
 
 			case "track":
@@ -189,6 +188,7 @@ class SpotifyAPI:
 
 
 	def items_by_search(self, query: str) -> list[Item]:
+		query = query.lower()
 		search_type = "track"
 
 		for t in ("track", "album", "artist", "playlist"):

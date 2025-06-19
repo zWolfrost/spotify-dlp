@@ -28,7 +28,7 @@ def init_args() -> argparse.Namespace:
 	return parser.parse_args()
 
 def validate_args(args: argparse.Namespace) -> argparse.Namespace:
-	args.query = " ".join(args.query).lower().strip()
+	args.query = " ".join(args.query)
 
 	parse_slice_str([], args.slice)
 
@@ -146,12 +146,17 @@ def main():
 				print("{:>12} {}".format(f"{{{keys}}}:", value))
 			return
 
+		CUTOFF_LENGTH = 100
+
 		tag_print(f"The query you requested contained {len(tracklist)} track(s):", color=Colors.BOLD)
-		for track in tracklist:
+		for track in tracklist[:CUTOFF_LENGTH]:
 			print(track.format_with_index(args.format))
+		if len(tracklist) > CUTOFF_LENGTH:
+			print(f"... and {len(tracklist) - CUTOFF_LENGTH} more track(s).")
+
+		print()
 
 		if not args.yes:
-			print()
 			choice = tag_print("Are you sure you want to download these tracks? [Y/n]\n", color=Colors.BOLD, prompt=True)
 
 			if "n" in choice.lower():
@@ -159,8 +164,6 @@ def main():
 
 			if choice:
 				print()
-		else:
-			print()
 
 
 		### DOWNLOAD TRACKS ###
