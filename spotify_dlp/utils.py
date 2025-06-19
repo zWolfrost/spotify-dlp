@@ -40,13 +40,15 @@ class Config():
 			return os.path.expanduser("~/.config/spotify-dlp/config.json")
 
 	@staticmethod
-	def read(name: str = None):
-		if not os.path.exists(os.path.dirname(Config.get_config_filepath())) or \
-				not os.path.isfile(Config.get_config_filepath()):
-			return Config.DEFAULT_CONFIG.get(name)
+	def raw_read():
+		if os.path.isfile(Config.get_config_filepath()):
+			with open(Config.get_config_filepath(), "r") as f:
+				return json.load(f)
+		return {}
 
-		with open(Config.get_config_filepath(), "r") as f:
-			settings: dict = Config.DEFAULT_CONFIG | json.load(f)
+	@staticmethod
+	def read(name: str = None):
+		settings = Config.DEFAULT_CONFIG | Config.raw_read()
 
 		return settings.get(name) if name else settings
 
@@ -54,11 +56,7 @@ class Config():
 	def write(name: str, value: str):
 		os.makedirs(os.path.dirname(Config.get_config_filepath()), exist_ok=True)
 
-		settings = {}
-
-		if os.path.isfile(Config.get_config_filepath()):
-			with open(Config.get_config_filepath(), "r") as f:
-				settings = json.load(f)
+		settings = Config.raw_read()
 
 		settings[name] = value
 

@@ -67,9 +67,9 @@ def main():
 			print(
 				"To authenticate, please follow these steps:\n"
 				"1. Go to https://developer.spotify.com/dashboard/applications\n"
-				"2. Press \"Create app\" and fill in details for name and description.\n"
-				"3. Set \"Redirect URIs\" to a random URL, such as \"http://127.0.0.1:3000/\".\n"
-				"4. Press \"Save\" and paste your Client ID and Client Secret below.\n"
+				"2. Press \"Create app\" and fill in details for name and description;\n"
+				"3. Set \"Redirect URIs\" to a random URL, such as \"http://127.0.0.1:3000/\";\n"
+				"4. Press \"Save\" and paste your Client ID & Client Secret below.\n"
 			)
 			client_id = input("Client ID: ").strip()
 			client_secret = input("Client Secret: ").strip()
@@ -82,7 +82,7 @@ def main():
 
 			Config.write("client_id", client_id)
 			Config.write("client_secret", client_secret)
-			tag_print(f"Tokens saved to ~/.config/spotify-dlp/config.json", color=Colors.BOLD)
+			tag_print(f"Authorization codes saved to ~/.config/spotify-dlp/config.json", color=Colors.BOLD)
 
 			return
 		elif not args.query:
