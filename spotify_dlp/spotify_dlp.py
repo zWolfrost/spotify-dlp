@@ -14,7 +14,7 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-s", "--client-secret", type=str, help="The Spotify Client Secret.")
 
 	parser.add_argument("-f", "--format", type=str, help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
-	parser.add_argument("-l", "--slice", type=str, help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Multiple slices can be specified with a comma \",\".")
+	parser.add_argument("-r", "--range", type=str, help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Multiple ranges can be specified with a comma \",\".")
 
 	parser.add_argument("-o", "--output", type=str, help="The output path of the downloaded tracks.")
 	parser.add_argument("-c", "--codec", type=str, choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks. By default, it is unchanged from the one \"yt-dlp\" downloads. Requires \"ffmpeg\" to be installed.")
@@ -30,10 +30,10 @@ def init_args() -> argparse.Namespace:
 def validate_args(args: argparse.Namespace) -> argparse.Namespace:
 	args.query = " ".join(args.query)
 
-	parse_slice_str([], args.slice)
+	parse_range_str([], args.range)
 
 	try:
-		Item().format_with_index(args.format)
+		Item().format(args.format)
 	except KeyError as e:
 		raise HandledError(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.") from e
 
@@ -42,12 +42,12 @@ def validate_args(args: argparse.Namespace) -> argparse.Namespace:
 
 	return args
 
-def parse_slice_str(lst: list, slice_str: str) -> list[int]:
+def parse_range_str(lst: list, range_str: str) -> list[int]:
 	indexes = set()
 
-	for slice in slice_str.split(","):
+	for range_segment in range_str.split(","):
 		try:
-			beg_index, part, end_index = slice.partition(":")
+			beg_index, part, end_index = range_segment.partition(":")
 			if part:
 				beg_index = 0        if beg_index == "" else int(beg_index) - 1
 				end_index = len(lst) if end_index == "" else int(end_index)
@@ -55,7 +55,7 @@ def parse_slice_str(lst: list, slice_str: str) -> list[int]:
 			else:
 				indexes.add(int(beg_index) - 1)
 		except ValueError:
-			raise HandledError("Invalid slice format.")
+			raise HandledError("Invalid range format.")
 
 	return [lst[i] for i in sorted(indexes) if 0 <= i < len(lst)]
 
@@ -130,10 +130,10 @@ def main():
 		if len(tracklist) == 0:
 			raise HandledError("No tracks were found.")
 
-		tracklist = parse_slice_str(tracklist, args.slice)
+		tracklist = parse_range_str(tracklist, args.range)
 
 		if len(tracklist) == 0:
-			raise HandledError(f"The specified slice is out of range.")
+			raise HandledError(f"The specified range is out of bounds.")
 
 
 		### DISPLAY TRACKLIST ###
@@ -149,7 +149,7 @@ def main():
 		CUTOFF_LENGTH = 100
 		tag_print(f"The query you requested contained {len(tracklist)} track(s):", color=Colors.BOLD)
 		for track in tracklist[:CUTOFF_LENGTH]:
-			print(track.format_with_index(args.format))
+			print(track.format(args.format))
 		if len(tracklist) > CUTOFF_LENGTH:
 			print(f"... and {len(tracklist) - CUTOFF_LENGTH} more track(s).")
 

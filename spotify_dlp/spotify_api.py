@@ -74,10 +74,6 @@ class Item:
 	def safe_format(self, format: str) -> str:
 		return re.sub(r"[/<>:\"\\|?*]", "_", self.format(format).strip())
 
-	def format_with_index(self, format: str) -> str:
-		has_placeholder = lambda f, p: any(n == p for _, n, _, _ in string.Formatter().parse(f))
-		return self.format(("" if has_placeholder(format, "index") else "{index}. ") + format)
-
 
 class SpotifyAPI:
 	client_id: str

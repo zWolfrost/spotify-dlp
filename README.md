@@ -30,7 +30,7 @@ Then, it downloads the result by using `yt-dlp`.
 | `-i` `--client-id`     | "qwertyuiop"       | The Spotify Client ID.
 | `-s` `--client-secret` | "asdfghjkl"        | The Spotify Client Secret.
 | `-f` `--format`        | "{index}. {title}" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
-| `-l` `--slice`         | "2:6,10"           | The beginning and ending index of the list items<br>to download, separated by a colon "`:`" (1-based). <br>Multiple slices can be specified with a comma "`,`".
+| `-r` `--range`         | "2:6,10"           | The beginning and ending index of the list items<br>to download, separated by a colon "`:`" (1-based). <br>Multiple ranges can be specified with a comma "`,`".
 | `-o` `--output`        | "./album/"         | The output path of the downloaded tracks.
 | `-c` `--codec`         | "mp3"              | The audio codec of the downloaded tracks.<br>By default, it is unchanged from the one `yt-dlp` downloads.<br>Requires `ffmpeg` to be installed.
 | `-m` `--metadata`      |                    | Whether to download metadata (such as covers).
@@ -95,5 +95,6 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 <br>- Removed authentication via PKCE flow, as [spotify only supports up to 25 users for apps not made by companies.](https://docs.google.com/forms/d/1O87xdPP1zWUDyHnduwbEFpcjA57JOaefCgBShKjAqlo/viewform?edit_requested=true)
 - **2.5.0**:
 <br>- Added config file support.
-<br>- Added comma (",") support for `--slice` argument.
+<br>- Renamed `--slice` argument to `--range`.
+<br>- Added comma (",") support for `--range` argument.
 <br>- The item type can be now specified in the search query; removed `--type` argument.

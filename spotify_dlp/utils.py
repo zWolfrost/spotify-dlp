@@ -22,8 +22,8 @@ class Config():
 	DEFAULT_CONFIG = {
 		"client_id": None,
 		"client_secret": None,
-		"format": "{title} - {authors} ({album})",
-		"slice": ":",
+		"format": "{index}. {title} - {authors} ({album})",
+		"range": ":",
 		"output": ".",
 		"codec": None,
 		"metadata": False,
