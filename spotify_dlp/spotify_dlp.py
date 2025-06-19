@@ -15,7 +15,7 @@ def init_args() -> argparse.Namespace:
 
 	parser.add_argument("-f", "--format", type=str, help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
 	parser.add_argument("-t", "--type", type=str, choices=["album", "artist", "playlist", "track"], help="When searching up a query, the specified type of content.")
-	parser.add_argument("-l", "--slice", type=str, help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Either one of those indexes can be omitted.")
+	parser.add_argument("-l", "--slice", type=str, help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Multiple slices can be specified with a comma \",\".")
 
 	parser.add_argument("-o", "--output", type=str, help="The output path of the downloaded tracks.")
 	parser.add_argument("-c", "--codec", type=str, choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks. By default, it is unchanged from the one \"yt-dlp\" downloads. Requires \"ffmpeg\" to be installed.")
@@ -24,25 +24,14 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information and full errors.")
-	parser.add_argument("--version", action="version", version="%(prog)s 2.4.0")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.5.0")
 
 	return parser.parse_args()
 
-def parse_args(args: argparse.Namespace) -> argparse.Namespace:
+def validate_args(args: argparse.Namespace) -> argparse.Namespace:
 	args.query = " ".join(args.query)
 
-	try:
-		begindex, endindex = args.slice.split(":")
-	except ValueError:
-		begindex, endindex = args.slice, args.slice
-
-	try:
-		begindex = 0    if (begindex == "" or begindex == "0") else int(begindex)-1
-		endindex = None if (endindex == "" or endindex == "0") else int(endindex)
-
-		args.slice = (begindex, endindex)
-	except ValueError as e:
-		raise HandledError("Invalid slice argument.") from e
+	parse_slice_str([], args.slice)
 
 	try:
 		Item().format_with_index(args.format)
@@ -54,6 +43,22 @@ def parse_args(args: argparse.Namespace) -> argparse.Namespace:
 
 	return args
 
+def parse_slice_str(lst: list, slice_str: str) -> list[int]:
+	indexes = set()
+
+	for slice in slice_str.split(","):
+		try:
+			beg_index, part, end_index = slice.partition(":")
+			if part:
+				beg_index = 0        if beg_index == "" else int(beg_index) - 1
+				end_index = len(lst) if end_index == "" else int(end_index)
+				indexes.update(range(beg_index, end_index))
+			else:
+				indexes.add(int(beg_index) - 1)
+		except ValueError:
+			raise HandledError("Invalid slice format.")
+
+	return [lst[i] for i in sorted(indexes) if 0 <= i < len(lst)]
 
 def main():
 	try:
@@ -62,7 +67,7 @@ def main():
 			os.system("")
 
 		args = init_args()
-		args = parse_args(args)
+		args = validate_args(args)
 
 
 		### AUTHENTICATION ###
@@ -126,7 +131,7 @@ def main():
 		if len(tracklist) == 0:
 			raise HandledError("No tracks were found.")
 
-		tracklist = tracklist[args.slice[0]:args.slice[1]]
+		tracklist = parse_slice_str(tracklist, args.slice)
 
 		if len(tracklist) == 0:
 			raise HandledError(f"The specified slice is out of range.")
@@ -134,13 +139,14 @@ def main():
 
 		### DISPLAY TRACKLIST ###
 
+		print()
+
 		if args.format == "help":
 			tag_print("Available fields for the format argument:", color=Colors.BOLD)
 			for keys, value in tracklist[0].get_format_dict().items():
 				print("{:>12} {}".format(f"{{{keys}}}:", value))
 			return
 
-		print()
 		tag_print(f"The query you requested contained {len(tracklist)} track(s):", color=Colors.BOLD)
 		for track in tracklist:
 			print(track.format_with_index(args.format))
@@ -201,6 +207,7 @@ def main():
 
 			TRACK_DURATION_DELTA = 5
 			SEARCH_TRACKS_COUNT = 10
+			SHORT_FORMAT = "{title}"
 
 			ytdlp_options = DEFAULT_YTDLP_OPTIONS | {
 				"outtmpl": filepath + ".%(ext)s",
@@ -213,7 +220,7 @@ def main():
 			def search_entries(url: str) -> str:
 				return yt_dlp.YoutubeDL(ytdlp_options).extract_info(url, download=False)["entries"]
 
-			tag_print(f"Searching for track \"{track.format(args.format)}\"...\r", end="")
+			tag_print(f"Searching for track \"{track.format(SHORT_FORMAT)}\"... ({index}/{len(tracklist)})\r", end="")
 
 			try:
 				entries = search_entries(f"https://www.youtube.com/results?search_query={track.quoted_keywords}&sp=CAMSAhAB")
@@ -222,13 +229,13 @@ def main():
 					entries = search_entries(f"ytsearch{SEARCH_TRACKS_COUNT}:{track.keywords}")
 
 				if len(entries) == 0:
-					raise HandledError(f"No results found for track \"{track.format(args.format)}\".")
+					raise HandledError(f"No results found for track \"{track.format(SHORT_FORMAT)}\".")
 
 				yt_dlp.YoutubeDL(ytdlp_options).download([entries[0]["id"]])
 			except Exception as e:
 				tag_print(f"Error: {e}; Skipping track #{track.index}...", color=Colors.WARN)
 			else:
-				tag_print(f"Successfully downloaded \"{track.format(args.format)}\"! ({index}/{len(tracklist)})")
+				tag_print(f"Successfully downloaded \"{track.format(SHORT_FORMAT)}\"! ({index}/{len(tracklist)})")
 
 	except KeyboardInterrupt:
 		tag_print("Interrupted by user.", color=Colors.FAIL)

@@ -144,7 +144,7 @@ class SpotifyAPI:
 
 	def items_by_url(self, url: str) -> list[Item]:
 		item_type, item_id = self.parse_url(url)
-		info = []
+		info: list[Item] = []
 
 		match item_type:
 			case "album":
