@@ -4,8 +4,8 @@ class HandledError(Exception):
    pass
 
 def tag_print(string: str, color: str = None, prompt: bool = False, end: str = "\n"):
-	TAG = "[spotify-dlp] "
-	string = TAG + string
+	TAG = "[spotify-dlp]"
+	string = TAG + " " + string
 
 	if color:
 		string = color + string + Colors.ENDC
@@ -54,11 +54,11 @@ class Config():
 
 	@staticmethod
 	def write(name: str, value: str):
-		os.makedirs(os.path.dirname(Config.get_config_filepath()), exist_ok=True)
-
 		settings = Config.raw_read()
 
 		settings[name] = value
+
+		os.makedirs(os.path.dirname(Config.get_config_filepath()), exist_ok=True)
 
 		with open(Config.get_config_filepath(), "w") as f:
 			json.dump(settings, f, indent=4)
