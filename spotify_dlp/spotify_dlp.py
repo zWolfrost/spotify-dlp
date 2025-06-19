@@ -93,7 +93,7 @@ def main():
 
 			Config.write("client_id", client_id)
 			Config.write("client_secret", client_secret)
-			tag_print(f"Authorization codes saved to ~/.config/spotify-dlp/config.json", color=Colors.BOLD)
+			tag_print(f"Authorization codes saved to the config file.", color=Colors.BOLD)
 
 			return
 		elif not args.query:
