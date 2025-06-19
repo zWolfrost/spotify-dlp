@@ -49,6 +49,9 @@ def parse_args(args: argparse.Namespace) -> argparse.Namespace:
 	except KeyError as e:
 		raise HandledError(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.") from e
 
+	if args.codec and not yt_dlp.utils.check_executable("ffmpeg"):
+		raise HandledError("The \"--codec\" argument requires \"ffmpeg\" to be installed. Please install it and try again.")
+
 	return args
 
 
@@ -71,13 +74,17 @@ def main():
 				"3. Set \"Redirect URIs\" to a random URL, such as \"http://127.0.0.1:3000/\";\n"
 				"4. Press \"Save\" and paste your Client ID & Client Secret below.\n"
 			)
-			client_id = input("Client ID: ").strip()
-			client_secret = input("Client Secret: ").strip()
 
-			if len(client_id) != 32 or not client_id.isalnum():
+			is_valid_code = lambda code: len(code) == 32 and code.isalnum()
+
+			client_id = input("Client ID: ").strip()
+
+			if not is_valid_code(client_id):
 				raise HandledError("Invalid Client ID. Please try again.")
 
-			if len(client_secret) != 32 or not client_secret.isalnum():
+			client_secret = input("Client Secret: ").strip()
+
+			if not is_valid_code(client_secret):
 				raise HandledError("Invalid Client Secret. Please try again.")
 
 			Config.write("client_id", client_id)
@@ -89,6 +96,7 @@ def main():
 			raise HandledError("No query was provided. Please provide a query or a link to a Spotify album, artist, playlist or track.")
 
 		if args.client_id and args.client_secret:
+			tag_print("Fetching access token...")
 			try:
 				spotify = SpotifyAPI.from_client_credentials_flow(args.client_id, args.client_secret)
 			except Exception as e:
