@@ -14,7 +14,6 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-s", "--client-secret", type=str, help="The Spotify Client Secret.")
 
 	parser.add_argument("-f", "--format", type=str, help="The format of the downloaded tracks' names. Set to \"help\" for a list of available fields.")
-	parser.add_argument("-t", "--type", type=str, choices=["album", "artist", "playlist", "track"], help="When searching up a query, the specified type of content.")
 	parser.add_argument("-l", "--slice", type=str, help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Multiple slices can be specified with a comma \",\".")
 
 	parser.add_argument("-o", "--output", type=str, help="The output path of the downloaded tracks.")
@@ -29,7 +28,7 @@ def init_args() -> argparse.Namespace:
 	return parser.parse_args()
 
 def validate_args(args: argparse.Namespace) -> argparse.Namespace:
-	args.query = " ".join(args.query)
+	args.query = " ".join(args.query).lower().strip()
 
 	parse_slice_str([], args.slice)
 
@@ -121,7 +120,7 @@ def main():
 				SpotifyAPI.parse_url(args.query)
 			except ValueError:
 				tag_print("Searching up the query...")
-				tracklist = spotify.items_by_search(args.query, args.type)
+				tracklist = spotify.items_by_search(args.query)
 			else:
 				tag_print("Fetching the query URL...")
 				tracklist = spotify.items_by_url(args.query)

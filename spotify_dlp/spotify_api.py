@@ -188,7 +188,15 @@ class SpotifyAPI:
 		return info
 
 
-	def items_by_search(self, query: str, search_type="track") -> list[Item]:
+	def items_by_search(self, query: str) -> list[Item]:
+		search_type = "track"
+
+		for t in ("track", "album", "artist", "playlist"):
+			if t in query:
+				query = query.replace(t, "").strip()
+				search_type = t
+				break
+
 		result = self.api_get_request(f"/search?q={query}&type={search_type}&limit=1")
 		result = list(result.values())[0]["items"]
 

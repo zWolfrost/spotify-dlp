@@ -25,12 +25,11 @@ Then, it downloads the result by using `yt-dlp`.
 ## Arguments
 | Command                | Example            | Description
 |:-:                     |:-:                 |:-
-|                        | "paranoid android" | The words to search up<br>or a link to a spotify album, artist, playlist or track.
+|                        | "kid a album"      | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>Include keywords like `album` or `playlist`<br>to specify the type of item to search for.
 | `-a` `--auth`          |                    | Authenticate using the client credentials flow and exit.
 | `-i` `--client-id`     | "qwertyuiop"       | The Spotify Client ID*.
 | `-s` `--client-secret` | "asdfghjkl"        | The Spotify Client Secret*.
 | `-f` `--format`        | "{index}. {title}" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
-| `-t` `--type`          | "track"            | When searching up a query,<br>the specified type of content.
 | `-l` `--slice`         | "2:6,10"           | The beginning and ending index of the list items<br>to download, separated by a colon "`:`" (1-based). <br>Multiple slices can be specified with a comma "`,`".
 | `-o` `--output`        | "./album/"         | The output path of the downloaded tracks.
 | `-c` `--codec`         | "mp3"              | The audio codec of the downloaded tracks.<br>By default, it is unchanged from the one `yt-dlp` downloads.<br>Requires `ffmpeg` to be installed.
@@ -102,3 +101,4 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 - **2.5.0**:
 <br>- Added config file support.
 <br>- Added comma (",") support for `--slice` argument.
+<br>- The item type can be now specified in the search query; Removed `--type` argument.

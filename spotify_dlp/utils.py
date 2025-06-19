@@ -23,7 +23,6 @@ class Config():
 		"client_id": None,
 		"client_secret": None,
 		"format": "{title} - {authors} ({album})",
-		"type": "track",
 		"slice": ":",
 		"output": ".",
 		"codec": None,
