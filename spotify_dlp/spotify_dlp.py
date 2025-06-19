@@ -224,10 +224,10 @@ def main():
 			tag_print(f"Searching for track \"{track.format(SHORT_FORMAT)}\"... ({index}/{len(tracklist)})\r", end="")
 
 			try:
-				entries = search_entries(f"https://www.youtube.com/results?search_query={track.quoted_keywords}&sp=CAMSAhAB")
+				entries = search_entries(f"ytsearch{SEARCH_TRACKS_COUNT}:{track.keywords}")
 
 				if len(entries) == 0:
-					entries = search_entries(f"ytsearch{SEARCH_TRACKS_COUNT}:{track.keywords}")
+					entries = search_entries(f"https://www.youtube.com/results?search_query={track.quoted_keywords}&sp=CAMSAhAB")
 
 				if len(entries) == 0:
 					raise HandledError(f"No results found for track \"{track.format(SHORT_FORMAT)}\".")
