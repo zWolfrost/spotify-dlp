@@ -36,7 +36,7 @@ class Config():
 		if os.name == "nt":
 			return os.path.join(os.getenv("APPDATA"), "spotify-dlp", "config.json")
 		else:
-			return os.path.expanduser("~/.config/spotify-dlp/config.json")
+			return os.path.join(os.path.expanduser("~"), ".config", "spotify-dlp", "config.json")
 
 	@staticmethod
 	def raw_read():
