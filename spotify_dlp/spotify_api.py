@@ -1,4 +1,4 @@
-import requests, re, string
+import requests, re
 from urllib.parse import urlencode, quote_plus
 from spotify_dlp.utils import HandledError, tag_print
 
