@@ -61,3 +61,22 @@ class Config():
 
 		with open(Config.get_config_filepath(), "w") as f:
 			json.dump(settings, f, indent=4)
+
+class YTDLPLogger:
+	def __init__(self, verbose: bool = False):
+		self.verbose = verbose
+
+	def debug(self, msg: str):
+		if self.verbose:
+			print(msg)
+
+	def info(self, msg: str):
+		if self.verbose:
+			print(msg)
+
+	def warning(self, msg: str):
+		if self.verbose:
+			print(msg)
+
+	def error(self, msg: str):
+		pass

@@ -1,6 +1,6 @@
 import os, argparse, requests, yt_dlp
 from spotify_dlp.spotify_api import SpotifyAPI, SpotifyItem
-from spotify_dlp.utils import HandledError, tag_print, Colors, Config
+from spotify_dlp.utils import HandledError, tag_print, Colors, Config, YTDLPLogger
 
 
 def init_args() -> argparse.Namespace:
@@ -171,8 +171,7 @@ def main():
 			os.makedirs(args.output)
 
 		DEFAULT_YTDLP_OPTIONS = {
-			"quiet": not args.verbose,
-			"no_warnings": not args.verbose,
+			"logger": YTDLPLogger(verbose=args.verbose),
 			"format": "bestaudio/best",
 			"noplaylist": True,
 			"extract_flat": True,
@@ -187,43 +186,42 @@ def main():
 		} if args.codec else {})
 
 		for index, track in enumerate(tracklist, start=1):
-			filename = track.safe_format(args.format)
-			filepath = os.path.join(args.output, filename)
-
-			if args.metadata:
-				coverpath = os.path.join(args.output, f"{track.album}.jpg")
-				if not os.path.exists(coverpath):
-					try:
-						img_data = requests.get(track.cover).content
-						open(coverpath, "wb").write(img_data)
-					except Exception as e:
-						tag_print(f"An error was encountered while trying to download the cover for \"{track.album}\": {e}", color=Colors.WARN)
-					else:
-						if args.verbose:
-							tag_print(f"Successfully downloaded the cover for \"{track.album}\"!")
-
-			if os.path.exists(f"{filepath}.{args.codec}"):
-				tag_print(f"File \"{filename}\" already exists; Skipping track #{track.index}...", color=Colors.WARN)
-				continue
-
-			TRACK_DURATION_DELTA = 5
-			SEARCH_TRACKS_COUNT = 10
-			SHORT_FORMAT = "{title}"
-
-			ytdlp_options = DEFAULT_YTDLP_OPTIONS | {
-				"outtmpl": filepath + ".%(ext)s",
-				"match_filter": yt_dlp.utils.match_filter_func(
-					f"duration>={track.duration-TRACK_DURATION_DELTA} & duration<={track.duration+TRACK_DURATION_DELTA}"
-				),
-				"playlistend": SEARCH_TRACKS_COUNT
-			}
-
-			def search_entries(url: str) -> str:
-				return yt_dlp.YoutubeDL(ytdlp_options).extract_info(url, download=False)["entries"]
-
-			tag_print(f"Searching for track \"{track.format(SHORT_FORMAT)}\"... ({index}/{len(tracklist)})\r", end="")
-
 			try:
+				filename = track.safe_format(args.format)
+				filepath = os.path.join(args.output, filename)
+
+				if args.metadata:
+					coverpath = os.path.join(args.output, f"{track.album}.jpg")
+					if not os.path.exists(coverpath):
+						try:
+							img_data = requests.get(track.cover).content
+							open(coverpath, "wb").write(img_data)
+						except Exception as e:
+							tag_print(f"An error was encountered while trying to download the cover for \"{track.album}\": {e}", color=Colors.WARN)
+						else:
+							if args.verbose:
+								tag_print(f"Successfully downloaded the cover for \"{track.album}\"!")
+
+				if os.path.exists(f"{filepath}.{args.codec}"):
+					raise HandledError(f"File \"{filename}\" already exists")
+
+				TRACK_DURATION_DELTA = 5
+				SEARCH_TRACKS_COUNT = 10
+				SHORT_FORMAT = "{title}"
+
+				ytdlp_options = DEFAULT_YTDLP_OPTIONS | {
+					"outtmpl": filepath + ".%(ext)s",
+					"match_filter": yt_dlp.utils.match_filter_func(
+						f"duration>={track.duration-TRACK_DURATION_DELTA} & duration<={track.duration+TRACK_DURATION_DELTA}"
+					),
+					"playlistend": SEARCH_TRACKS_COUNT
+				}
+
+				def search_entries(url: str) -> str:
+					return yt_dlp.YoutubeDL(ytdlp_options).extract_info(url, download=False)["entries"]
+
+				tag_print(f"Searching for track \"{track.format(SHORT_FORMAT)}\"... ({index}/{len(tracklist)})\r", end="")
+
 				entries = search_entries(f"ytsearch{SEARCH_TRACKS_COUNT}:{track.keywords}")
 
 				if len(entries) == 0:
@@ -234,7 +232,10 @@ def main():
 
 				yt_dlp.YoutubeDL(ytdlp_options).download([entries[0]["id"]])
 			except Exception as e:
-				tag_print(f"Error: {e}; Skipping track #{track.index}...", color=Colors.WARN)
+				msg = str(e)
+				if "Sign in to confirm your age" in msg:
+					msg = "Video is age-restricted and cannot be downloaded"
+				tag_print(f"Error: {msg}; Skipping track #{track.index}...", color=Colors.WARN)
 			else:
 				tag_print(f"Successfully downloaded \"{track.format(SHORT_FORMAT)}\"! ({index}/{len(tracklist)})")
 
