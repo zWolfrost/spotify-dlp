@@ -98,3 +98,5 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 <br>- Renamed `--slice` argument to `--range`.
 <br>- Added comma (",") support for `--range` argument.
 <br>- The item type can be now specified in the search query; removed `--type` argument.
+	- **2.5.1**:
+	<br>- Fixed "Requested format is not available" error.

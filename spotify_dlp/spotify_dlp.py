@@ -23,7 +23,7 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
 	parser.add_argument("-v", "--verbose", action="store_true", help="Whether to display verbose information and full errors.")
-	parser.add_argument("--version", action="version", version="%(prog)s 2.5.0")
+	parser.add_argument("--version", action="version", version="%(prog)s 2.5.1")
 
 	return parser.parse_args()
 
@@ -173,7 +173,7 @@ def main():
 		DEFAULT_YTDLP_OPTIONS = {
 			"quiet": not args.verbose,
 			"no_warnings": not args.verbose,
-			"format": "bestaudio",
+			"format": "bestaudio/best",
 			"noplaylist": True,
 			"extract_flat": True,
 			"extractor_args": { "youtube": { "player_client": ["tv", "web"] } },
