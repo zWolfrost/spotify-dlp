@@ -47,29 +47,30 @@ class SpotifyItem:
 
 
 	@property
-	def url(self):
+	def url(self) -> str:
 		return f"https://open.spotify.com/{self.type}/{self.id}"
 
 	@property
-	def uri(self):
+	def uri(self) -> str:
 		return f"spotify:{self.type}:{self.id}"
 
 	@property
-	def keywords(self):
+	def keywords(self) -> str:
 		return f"{self.title} {' '.join(self.authors)} {self.album}"
 
 	@property
-	def quoted_keywords(self):
+	def quoted_keywords(self) -> str:
 		return quote_plus(self.keywords)
 
-
-	def get_format_dict(self) -> dict:
+	@property
+	def format_dict(self) -> dict:
 		self_dict = self.__dict__.copy()
 		self_dict["authors"] = ", ".join(self_dict["authors"]) if self_dict["authors"] else None
 		return self_dict
 
+
 	def format(self, format: str) -> str:
-		return format.format(**self.get_format_dict())
+		return format.format(**self.format_dict)
 
 	def safe_format(self, format: str) -> str:
 		return re.sub(r"[/\\?%*:|\"<>\x7F\x00-\x1F]", "_", self.format(format).strip())

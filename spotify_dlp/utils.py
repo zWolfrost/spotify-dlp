@@ -39,7 +39,7 @@ class Config():
 			return os.path.join(os.path.expanduser("~"), ".config", "spotify-dlp", "config.json")
 
 	@staticmethod
-	def raw_read():
+	def raw_read() -> dict:
 		if os.path.isfile(Config.get_config_filepath()):
 			with open(Config.get_config_filepath(), "r") as f:
 				return json.load(f)

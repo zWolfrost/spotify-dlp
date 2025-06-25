@@ -142,7 +142,7 @@ def main():
 
 		if args.format == "help":
 			tag_print("Available fields for the format argument:", color=Colors.BOLD)
-			for keys, value in tracklist[0].get_format_dict().items():
+			for keys, value in tracklist[0].format_dict.items():
 				print("{:>12} {}".format(f"{{{keys}}}:", value))
 			return
 
