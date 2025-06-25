@@ -65,14 +65,14 @@ class Item:
 
 	def get_format_dict(self) -> dict:
 		self_dict = self.__dict__.copy()
-		self_dict["authors"] = ", ".join(self_dict["authors"])
+		self_dict["authors"] = ", ".join(self_dict["authors"]) if self_dict["authors"] else None
 		return self_dict
 
 	def format(self, format: str) -> str:
 		return format.format(**self.get_format_dict())
 
 	def safe_format(self, format: str) -> str:
-		return re.sub(r"[/<>:\"\\|?*]", "_", self.format(format).strip())
+		return re.sub(r"[/\\?%*:|\"<>\x7F\x00-\x1F]", "_", self.format(format).strip())
 
 
 class SpotifyAPI:

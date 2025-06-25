@@ -42,7 +42,7 @@ def validate_args(args: argparse.Namespace) -> argparse.Namespace:
 
 	return args
 
-def parse_range_str(lst: list, range_str: str) -> list[int]:
+def parse_range_str(lst: list, range_str: str) -> list:
 	indexes = set()
 
 	for range_segment in range_str.split(","):
@@ -130,7 +130,7 @@ def main():
 		if len(tracklist) == 0:
 			raise HandledError("No tracks were found.")
 
-		tracklist = parse_range_str(tracklist, args.range)
+		tracklist: list[Item] = parse_range_str(tracklist, args.range)
 
 		if len(tracklist) == 0:
 			raise HandledError(f"The specified range is out of bounds.")
