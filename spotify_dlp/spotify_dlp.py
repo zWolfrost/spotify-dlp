@@ -17,7 +17,7 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-r", "--range", type=str, help="The beginning and ending index of the list items to download separated by a colon \":\" (1-based). Multiple ranges can be specified with a comma \",\".")
 
 	parser.add_argument("-o", "--output", type=str, help="The output path of the downloaded tracks.")
-	parser.add_argument("-c", "--codec", type=str, choices=["m4a", "mp3", "flac", "wav", "aac", "ogg", "opus"], help="The audio codec of the downloaded tracks. By default, it is unchanged from the one \"yt-dlp\" downloads. Requires \"ffmpeg\" to be installed.")
+	parser.add_argument("-c", "--codec", type=str, choices=["mp3", "aac", "m4a", "opus", "vorbis", "flac", "alac", "wav"], help="The audio codec of the downloaded tracks. By default, it is unchanged from the one \"yt-dlp\" downloads. Requires \"ffmpeg\" to be installed.")
 	parser.add_argument("-m", "--metadata", action="store_true", help="Whether to download metadata (such as covers).")
 
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
