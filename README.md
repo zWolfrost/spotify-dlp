@@ -99,6 +99,6 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 <br>- Added comma (",") support for `--range` argument.
 <br>- The item type can be now specified in the search query; removed `--type` argument.
 	- **2.5.1**:
+	<br>- Fixed wrong config path message on Windows.
 	<br>- Fixed "Requested format is not available" error.
-	<br>- Fixed safe formatting of filenames.
-	<br>- Better error message on age-restricted content.
+	<br>- Other small bug fixes.
