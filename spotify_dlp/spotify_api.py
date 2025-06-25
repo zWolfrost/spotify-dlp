@@ -3,7 +3,7 @@ from urllib.parse import urlencode, quote_plus
 from spotify_dlp.utils import HandledError, tag_print
 
 
-class Item:
+class SpotifyItem:
 	id: str
 	type: str
 	title: str
@@ -138,9 +138,9 @@ class SpotifyAPI:
 		return response.json()
 
 
-	def items_by_url(self, url: str) -> list[Item]:
+	def items_by_url(self, url: str) -> list[SpotifyItem]:
 		item_type, item_id = self.parse_url(url)
-		info: list[Item] = []
+		info: list[SpotifyItem] = []
 
 		match item_type:
 			case "album":
@@ -149,12 +149,12 @@ class SpotifyAPI:
 					result = self.api_get_request(f"/albums/{item_id}/tracks?limit=50&offset={len(info)}")
 					for item in result["items"]:
 						item["album"] = album
-						info.append(Item(item))
+						info.append(SpotifyItem(item))
 
 			case "artist":
 				result = self.api_get_request(f"/artists/{item_id}/top-tracks?market=US")
 				for item in result["tracks"]:
-					info.append(Item(item))
+					info.append(SpotifyItem(item))
 
 			case "playlist":
 				total = None
@@ -164,7 +164,7 @@ class SpotifyAPI:
 						total = result["total"]
 					for item in result["items"]:
 						if item["track"]["type"] == "track":
-							info.append(Item(item["track"]))
+							info.append(SpotifyItem(item["track"]))
 						else:
 							total -= 1
 					tag_print(f"Fetching items ({len(info)}/{total})...", start="\r", end="")
@@ -172,7 +172,7 @@ class SpotifyAPI:
 
 			case "track":
 				result = self.api_get_request(f"/tracks/{item_id}")
-				info.append(Item(result))
+				info.append(SpotifyItem(result))
 
 			case _:
 				raise HandledError(f"\"{item_type}\" type is not currently supported.")
@@ -183,7 +183,7 @@ class SpotifyAPI:
 		return info
 
 
-	def items_by_search(self, query: str) -> list[Item]:
+	def items_by_search(self, query: str) -> list[SpotifyItem]:
 		query = query.lower()
 		search_type = "track"
 

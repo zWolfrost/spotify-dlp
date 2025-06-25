@@ -1,5 +1,5 @@
 import os, argparse, requests, yt_dlp
-from spotify_dlp.spotify_api import SpotifyAPI, Item
+from spotify_dlp.spotify_api import SpotifyAPI, SpotifyItem
 from spotify_dlp.utils import HandledError, tag_print, Colors, Config
 
 
@@ -33,7 +33,7 @@ def validate_args(args: argparse.Namespace) -> argparse.Namespace:
 	parse_range_str([], args.range)
 
 	try:
-		Item().format(args.format)
+		SpotifyItem().format(args.format)
 	except KeyError as e:
 		raise HandledError(f"Invalid field \"{{{e.args[0]}}}\" in format argument. Use \"--format help\" to see available fields.") from e
 
@@ -130,7 +130,7 @@ def main():
 		if len(tracklist) == 0:
 			raise HandledError("No tracks were found.")
 
-		tracklist: list[Item] = parse_range_str(tracklist, args.range)
+		tracklist: list[SpotifyItem] = parse_range_str(tracklist, args.range)
 
 		if len(tracklist) == 0:
 			raise HandledError(f"The specified range is out of bounds.")
