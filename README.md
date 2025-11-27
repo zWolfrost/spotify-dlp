@@ -23,7 +23,7 @@ Then, it downloads the result by using `yt-dlp`.
 
 &nbsp;
 ## Arguments
-| Command                | Example            | Description
+| Command                | Example            | Short Description
 |:-:                     |:-:                 |:-
 |                        | "kid a album"      | The words to search up<br>or a link to a spotify album, artist, playlist or track.<br>Include keywords like `album` or `playlist`<br>to specify the type of item to search for.
 | `-a` `--auth`          |                    | Authenticate using the client credentials flow and exit.
@@ -32,7 +32,7 @@ Then, it downloads the result by using `yt-dlp`.
 | `-f` `--format`        | "{index}. {title}" | The format of the downloaded tracks' names.<br>Set to `help` for a list of available fields.
 | `-r` `--range`         | "2:6,10"           | The beginning and ending index of the list items<br>to download, separated by a colon "`:`" (1-based). <br>Multiple ranges can be specified with a comma "`,`".
 | `-o` `--output`        | "./album/"         | The output path of the downloaded tracks.
-| `-c` `--codec`         | "mp3"              | The audio codec of the downloaded tracks.<br>By default, it is unchanged from the one `yt-dlp` downloads.<br>Requires `ffmpeg` to be installed.
+| `-c` `--codec`         | "mp3"              | The audio codec of the downloaded tracks.<br>Requires `ffmpeg` to be installed.
 | `-m` `--metadata`      |                    | Whether to download metadata (such as covers).
 | `-y` `--yes`           |                    | Whether to skip the confirmation prompt.
 | `-v` `--verbose`       |                    | Whether to display verbose information and full errors.
