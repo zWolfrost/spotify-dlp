@@ -102,3 +102,5 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 	<br>- Fixed wrong config path message on Windows.
 	<br>- Fixed "Requested format is not available" error.
 	<br>- Other small bug fixes.
+	- **2.5.2**:
+	<br>- Fixed "Requested format is not available." error.
