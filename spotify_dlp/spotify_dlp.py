@@ -178,7 +178,6 @@ def main():
 			"format": "bestaudio/best",
 			"noplaylist": True,
 			"extract_flat": True,
-			"extractor_args": { "youtube": { "player_client": ["tv", "web"] } },
 		} | ({
 			"postprocessors": [
 				{
