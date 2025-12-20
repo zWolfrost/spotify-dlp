@@ -19,6 +19,7 @@ def init_args() -> argparse.Namespace:
 	parser.add_argument("-o", "--output", type=str, help="The output path of the downloaded tracks.")
 	parser.add_argument("-c", "--codec", type=str, choices=["mp3", "aac", "m4a", "opus", "vorbis", "flac", "alac", "wav"], help="The audio codec of the downloaded tracks. Defaults to \"mp3\", and requires \"ffmpeg\" to be installed, otherwise it is unchanged from the one \"yt-dlp\" downloads.")
 	parser.add_argument("-m", "--metadata", action="store_true", help="Whether to download metadata (such as covers).")
+	parser.add_argument("-b", "--browser", type=str, choices=["brave", "chrome", "chromium", "edge", "firefox", "opera", "safari", "vivaldi", "whale"], help="The name of the browser from which cookies should be extracted.")
 
 	parser.add_argument("-y", "--yes", action="store_true", help="Whether to skip the confirmation prompt.")
 
@@ -178,6 +179,7 @@ def main():
 			"format": "bestaudio/best",
 			"noplaylist": True,
 			"extract_flat": True,
+			"cookiesfrombrowser": (args.browser,) if args.browser else None
 		} | ({
 			"postprocessors": [
 				{

@@ -34,6 +34,7 @@ Then, it downloads the result by using `yt-dlp`.
 | `-o` `--output`        | "./album/"         | The output path of the downloaded tracks.
 | `-c` `--codec`         | "mp3"              | The audio codec of the downloaded tracks.<br>Requires `ffmpeg` to be installed.
 | `-m` `--metadata`      |                    | Whether to download metadata (such as covers).
+| `-b` `--browser`       | "chrome"           | The name of the browser from which cookies<br>should be extracted, to bypass the age restriction.
 | `-y` `--yes`           |                    | Whether to skip the confirmation prompt.
 | `-v` `--verbose`       |                    | Whether to display verbose information and full errors.
 | `-h` `--help`          |                    | Show the help message and exit.
@@ -104,3 +105,5 @@ spotify-dlp https://open.spotify.com/album/2Vq0Y8wgiZRYtZ1mQ7zOMG -i "your_clien
 	<br>- Other small bug fixes.
 	- **2.5.2**:
 	<br>- Fixed "Requested format is not available." error.
+- **2.6.0**:
+<br>- Added `--browser` argument which allows importing cookies from a browser.

@@ -27,6 +27,7 @@ class Config():
 		"output": ".",
 		"codec": None,
 		"metadata": False,
+		"browser": None,
 		"yes": False,
 		"verbose": False,
 	}
